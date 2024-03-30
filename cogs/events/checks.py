@@ -1,7 +1,7 @@
 import sqlite3
 from disnake.ext import commands
 
-conn = sqlite3.connect('PixelCBT.db')
+conn = sqlite3.connect('Pixel.db')
 cursor = conn.cursor()
 
 def is_blacklisted(ctx):

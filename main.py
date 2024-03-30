@@ -1,4 +1,5 @@
 import asyncio
+from pathlib import Path
 import sys
 import disnake
 from disnake.ext import commands
@@ -38,14 +39,21 @@ async def on_message(message: disnake.Message):
 @bot.event
 async def on_ready():
     bot.start_time = time.time()
-    print("Ваш виртуальный ассистент запущен.")
+    print("Да начнётся же вечеринка!")
+    loaded_cogs = set()
     for root, dirs, files in os.walk('cogs'):
-        for dir in dirs:
-            for filename in os.listdir(os.path.join('cogs', dir)):
-                if filename.endswith('.py'):
-                    bot.load_extension(f'cogs.{dir}.{filename[:-3]}')
+        for filename in files:
+            if filename.endswith('.py'):
+                cog_path = os.path.join(root, filename)
+                module_name = '.'.join(cog_path.split(os.sep))[:-3]
+                if module_name not in loaded_cogs:
+                    try:
+                        bot.load_extension(module_name)
+                        loaded_cogs.add(module_name)
+                    except Exception as e:
+                        print(f"Не удалось загрузить расширение {module_name}: {e}")
 
-@bot.command(description="Мейсон спать.")
+@bot.command(description="Pixel спать.")
 async def restart(ctx):
     if ctx.author.id == bot.owner.id:
         await ctx.reply("⭐ Трансляция не умерла... но сейчас, это конец её вещания.")

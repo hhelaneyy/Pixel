@@ -57,81 +57,79 @@ class UtilitiesCog(commands.Cog):
 
     @commands.slash_command(name='server', description='Статистика вашего сервера.')
     async def server(self, inter: disnake.ApplicationCommandInteraction):
-            guild = inter.guild
-            author = inter.author
-            rule_channel = guild.rules_channel.mention
-            region = inter.guild.preferred_locale
-            members = inter.guild.member_count
-            mfa_lvl = inter.guild.mfa_level
-            verification = inter.guild.verification_level
-            max_members = inter.guild.max_members
-            roles = len(guild.roles)
-            boost_role = inter.guild.premium_subscriber_role
-            boosters = guild.premium_subscription_count
-            boost_tier = guild.premium_tier
-            boost_progress = guild.premium_progress_bar_enabled
-            channels = len(guild.channels)
-            text_channels = len(guild.text_channels)
-            voice_channels = len(guild.voice_channels)
-            emojis = len(guild.emojis)
-            stikers = len(guild.stickers)
+        guild = inter.guild
+        author = inter.author
+        region = inter.guild.preferred_locale
+        members = inter.guild.member_count
+        mfa_lvl = inter.guild.mfa_level
+        verification = inter.guild.verification_level
+        max_members = inter.guild.max_members
+        roles = len(guild.roles)
+        boost_role = inter.guild.premium_subscriber_role
+        boosters = guild.premium_subscription_count
+        boost_tier = guild.premium_tier
+        boost_progress = guild.premium_progress_bar_enabled
+        channels = len(guild.channels)
+        text_channels = len(guild.text_channels)
+        voice_channels = len(guild.voice_channels)
+        emojis = len(guild.emojis)
+        stikers = len(guild.stickers)
 
-            if boost_progress == False:
-                boost_progress = 'Выключен'
-            if boost_progress == True:
-                boost_progress = 'Включен'
+        if boost_progress == False:
+            boost_progress = 'Выключен'
+        if boost_progress == True:
+            boost_progress = 'Включен'
 
-            if mfa_lvl == 0:
-                mfa_lvl = "Выключена"
-            else:
-                mfa_lvl= "Включена"
+        if mfa_lvl == 0:
+            mfa_lvl = "Выключена"
+        else:
+            mfa_lvl= "Включена"
 
-            about_guild = (
-                f'Владелец: **{guild.owner.name}**',
-                f'ID сервера: **{guild.id}**',
-                f'Регион: **{region}**',
-                f'Уровень проверки: **{verification}**',
-                f'Двухфакторная Аутентификация: **{mfa_lvl}**',
-            )
+        about_guild = (
+            f'Владелец: **{guild.owner.name}**',
+            f'ID сервера: **{guild.id}**',
+            f'Регион: **{region}**',
+            f'Уровень проверки: **{verification}**',
+            f'Двухфакторная Аутентификация: **{mfa_lvl}**',
+        )
 
-            roles = (
-                f'Ролей: **{roles}**',
-                f'Ваша высшая роль: **{author.top_role.mention}**',
-                f'Роль поддержавших: **{boost_role.mention if boost_role else "Роль отсутствует."}**',
-            )
+        roles = (
+            f'Ролей: **{roles}**',
+            f'Ваша высшая роль: **{author.top_role.mention}**',
+            f'Роль поддержавших: **{boost_role.mention if boost_role else "Роль отсутствует."}**',
+        )
 
-            channels_and_boosts = (
-                f'Прогресс Бар: **{boost_progress}**',
-                f'Поддержавших: **{boosters or "Поддержавших нет."}**',
-                f'Уровень поддержки: **{boost_tier}**',
-                f'---------------------------------',
-                f'Всего каналов: **{channels}**',
-                f'Канал правил: **{rule_channel or "Канала правил нет на сервере."}**',
-                f'Текстовых каналов: **{text_channels}**',
-                f'Голосовых каналов: **{voice_channels}**',
-            )
+        channels_and_boosts = (
+            f'Прогресс Бар: **{boost_progress}**',
+            f'Поддержавших: **{boosters or "Поддержавших нет."}**',
+            f'Уровень поддержки: **{boost_tier}**',
+            f'---------------------------------',
+            f'Всего каналов: **{channels}**',
+            f'Текстовых каналов: **{text_channels}**',
+            f'Голосовых каналов: **{voice_channels}**',
+        )
 
-            other = (
-                f'Участников: **{members}**',
-                f'Стикеры: **{stikers}**',
-                f'Эмодзи: **{emojis}**',
-                f'Максимальное кол-во участников: **{max_members}**',
-                f'Ботов: **{len(([member for member in guild.members if member.bot]))}**',
-            )
+        other = (
+            f'Участников: **{members}**',
+            f'Стикеры: **{stikers}**',
+            f'Эмодзи: **{emojis}**',
+            f'Максимальное кол-во участников: **{max_members}**',
+            f'Ботов: **{len(([member for member in guild.members if member.bot]))}**',
+        )
 
-            emb = disnake.Embed(title=f"Информация о сервере {guild.name}", description=guild.description or 'Описание отсутствует.', color=disnake.Color.random())
-            emb.add_field(name="> О сервере:", value='\n'.join(about_guild), inline=False)
-            emb.add_field(name="> Роли:", value='\n'.join(roles), inline=False)
-            emb.add_field(name="> Каналы и Бусты:", value='\n'.join(channels_and_boosts), inline=False)
-            emb.add_field(name="> Прочее:", value='\n'.join(other), inline=False)
+        emb = disnake.Embed(title=f"Информация о сервере {guild.name}", description=guild.description or 'Описание отсутствует.', color=disnake.Color.random())
+        emb.add_field(name="> О сервере:", value='\n'.join(about_guild), inline=False)
+        emb.add_field(name="> Роли:", value='\n'.join(roles), inline=False)
+        emb.add_field(name="> Каналы и Бусты:", value='\n'.join(channels_and_boosts), inline=False)
+        emb.add_field(name="> Прочее:", value='\n'.join(other), inline=False)
 
-            if guild.banner:
-                emb.set_image(url=guild.banner)
-            else:
-                pass
+        if guild.banner:
+            emb.set_image(url=guild.banner)
+        else:
+            pass
             
-            emb.set_thumbnail(url=guild.icon)
-            await inter.response.send_message(embed = emb)
+        emb.set_thumbnail(url=guild.icon)
+        await inter.response.send_message(embed = emb)
     
     @commands.command(description='Помогу вывести информацию о всех пользователях Discord.')
     async def user(self, ctx, user: disnake.User = None):

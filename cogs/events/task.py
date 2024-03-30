@@ -2,7 +2,6 @@ import asyncio
 import random
 import sqlite3
 import disnake
-import os
 from disnake.ext import commands, tasks
 
 conn = sqlite3.connect('Pixel.db')

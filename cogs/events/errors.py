@@ -24,6 +24,12 @@ class ErrorsCog(commands.Cog):
                 E.set_footer(text=random.choice(footer), icon_url=self.bot.owner.avatar)
                 await inter.send(embed=E)
                 return
+            elif isinstance(e, commands.CheckFailure):
+                E = disnake.Embed(title='🛑 Ой-ой, ошибочка вышла!', color=0xff0000)
+                E.add_field(name='Почему я вас динамлю?..', value='```Вы были добавлены в ЧС данной вечеринки, из-за чего потеряли доступ к командам.```')
+                E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
+                await inter.send(embed=E, delete_after=7)
+                return
             elif isinstance(e, commands.TooManyArguments):
                 em = "Слишком много гостей..."
             elif isinstance(e, commands.NotOwner):
@@ -59,6 +65,12 @@ class ErrorsCog(commands.Cog):
                 E.add_field(name='Комментарий организатора вечеринки:', value='Эта ошибка возникает в разных случаях. Если вы с ней столкнулись, пожалуйста, сообщите о ней на [официальном сервере разработки Pixel.](https://discord.gg/vmu85FNsqs)')
                 E.set_footer(text=random.choice(footer), icon_url=self.bot.owner.avatar)
                 await inter.send(embed=E)
+                return
+            elif isinstance(e, commands.CheckFailure):
+                E = disnake.Embed(title='🛑 Ой-ой, ошибочка вышла!', color=0xff0000)
+                E.add_field(name='Почему я вас динамлю?..', value='```Вы были добавлены в ЧС данной вечеринки, из-за чего потеряли доступ к командам.```')
+                E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
+                await inter.send(embed=E, ephemeral=True)
                 return
             elif isinstance(e, commands.TooManyArguments):
                 em = "Слишком много гостей..."

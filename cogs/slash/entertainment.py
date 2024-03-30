@@ -1,7 +1,6 @@
 import disnake
 from disnake.ext import commands
 import random
-
 import requests
 from core.utilities.embeds import footer, rp_desc
 
