@@ -35,13 +35,8 @@ class UtilitiesCog(commands.Cog):
         ]
 
         about_bot = [
-            f'\n🥱 | Язык программирования: __**Python {platform.python_version()}**__',
-            f'\n💻 | Платформа: __**{platform.platform()}**__',
-            f'\n🌌 | Версия обновления: __**CBT 1.3**__',
+            f'\n🌌 | Версия обновления: __**CBT 1.4.1**__',
             f'\n🏓 | Задержка: __**{round(self.bot.latency * float(1000))} мс**__',
-        ]
-
-        other = [
             f'\n💾 | Количество команд: __**{commands}**__',
             f'\n🐚 | Количество серверов: __**{guilds}**__',
             f'\n👤 | Количество пользователей: __**{users}**__',
@@ -50,7 +45,6 @@ class UtilitiesCog(commands.Cog):
         E = disnake.Embed(title='Статистика Пиксель, хи~', color=disnake.Color.random())
         E.add_field(name='> Основная информация', value=''.join(main))
         E.add_field(name='> Обо мне', value=''.join(about_bot), inline=False)
-        E.add_field(name='> Прочее', value=''.join(other))
         E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
         E.set_thumbnail(url=self.bot.user.avatar)
         await inter.send(embed=E)
@@ -155,7 +149,7 @@ class UtilitiesCog(commands.Cog):
         )
 
         emb = disnake.Embed(color=disnake.Color.random())
-        emb.add_field(name="> Общая информация", value='\n'.join(all_info), inline=False)
+        emb.add_field(name=None, value='\n'.join(all_info), inline=False)
         emb.set_author(name=user.name, icon_url=user.avatar)
 
         if banner and banner.banner:

@@ -1,7 +1,20 @@
 import random
 import disnake
 from disnake.ext import commands
+import sqlite3
 from core.utilities.embeds import footer
+
+conn = sqlite3.connect('Pixel.db')
+cursor = conn.cursor()
+
+cursor.execute('''
+            CREATE TABLE IF NOT EXISTS warns (
+            guild_name TEXT,
+            user_id TEXT,
+            w_count INTEGER
+        )
+''')
+conn.commit()
 
 class ModCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -11,7 +24,113 @@ class ModCog(commands.Cog):
     async def moderation(self, inter):
         ...
 
+    @moderation.sub_command(name='ban', description='Организатор вечеринки разрешил мне банить плохишей <3')
+    @commands.has_permissions(ban_members=True)
+    async def ban(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User, reason):
+        guild = inter.guild
+
+        await guild.ban(user, reason)
+        E = disnake.Embed(title='🛑 Нарушитель был забанен', color=0xff0000)
+        E.add_field(name='Администратор:', value=inter.author.mention)
+        E.add_field(name='Нарушитель:', value=user.mention)
+        E.add_field(name='Причина:', value=reason)
+        E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
+        E.set_thumbnail(url=user.avatar)
+        await inter.response.send_message(embed=E)
+
+    @moderation.sub_command(name='kick', description='Мне он не нравится, его я выгоняю!')
+    @commands.has_permissions(kick_members=True)
+    async def kick(self, inter: disnake.ApplicationCommandInteraction, user: disnake.Member, reason):
+        guild = inter.guild
+
+        await guild.kick(user, reason)
+        E = disnake.Embed(title='🔖 Нарушитель был кикнут', color=0xff0000)
+        E.add_field(name='Администратор:', value=inter.author.mention)
+        E.add_field(name='Нарушитель:', value=user.mention)
+        E.add_field(name='Причина:', value=reason)
+        E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
+        E.set_thumbnail(url=user.avatar)
+        await inter.response.send_message(embed=E)
+
+    @moderation.sub_command(name='warn', description='Пожалуйста, не делай так больше!')
+    @commands.has_permissions(moderate_members=True)
+    async def warn(self, inter: disnake.ApplicationCommandInteraction, member: disnake.Member, reason: str = None):
+        cursor.execute('SELECT w_count FROM warns WHERE guild_name = ? AND user_id = ?', (inter.guild.name, member.id))
+        row = cursor.fetchone()
+
+        if row:
+            count = row[0]
+        else:
+            count = 0
+
+        count += 1
+
+        if count == 1:
+            cursor.execute('INSERT INTO warns (guild_name, user_id, w_count) VALUES (?, ?, ?)', (inter.guild.name, member.id, count))
+            conn.commit()
+        else:
+            cursor.execute('UPDATE warns SET w_count = ? WHERE guild_name = ? AND user_id = ?', (count, inter.guild.name, member.id))
+            conn.commit()
+
+        E = disnake.Embed(title='🚨 Участник вечеринки получил предупреждение!', color=0xf4a676)
+        E.add_field(name='Администратор:', value=inter.author.mention)
+        E.add_field(name='Нарушитель:', value=member.mention)
+        if reason:
+            E.add_field(name='Причина:', value=reason)
+        else:
+            pass
+        E.add_field(name='Количество варнов:', value=count)
+        E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
+        await inter.response.send_message(embed=E)
+
+    @moderation.sub_command(name='unwarn', description='Я прощаю тебя.')
+    @commands.has_permissions(moderate_members=True)
+    async def unwarn(self, inter: disnake.ApplicationCommandInteraction, member: disnake.Member, count: int):
+        if count <= 0:
+            raise commands.CommandError(message='Указано отрицательное значение количества или ноль.')
+        else:
+            cursor.execute('SELECT w_count FROM warns WHERE guild_name = ? AND user_id = ?', (inter.guild.name, member.id))
+            row = cursor.fetchone()
+
+            if row:
+                warning_count = row[0]
+            else:
+                warning_count = 0
+
+            if warning_count == 0:
+                raise commands.CommandError(message='У пользователя нет варнов.')
+            if count >= warning_count:
+                cursor.execute('DELETE FROM warns WHERE guild_name = ? AND user_id = ?', (inter.guild.name, member.id))
+                conn.commit()
+                
+                embed1 = disnake.Embed(
+                    title="🎌 С пользователя сняты все обвинения!",
+                    color=0xf8b952
+                )
+                embed1.add_field(name='Администратор:', value=inter.author.mention)
+                embed1.add_field(name='Участник:', value=member.mention)
+                embed1.add_field(name='Снято варнов:', value='Все варны сняты')
+                embed1.add_field(name='Количество варнов:', value='0')
+                embed1.set_footer(text=random.choice(footer), icon_url=inter.author.avatar)
+                await inter.response.send_message(embed=embed1)
+            else:
+                warning_count -= count
+                cursor.execute('UPDATE warns SET w_count = ? WHERE guild_name = ? AND user_id = ?', (warning_count, inter.guild.name, member.id))
+                conn.commit()
+
+                embed = disnake.Embed(
+                    title="🎌 С пользователя сняты обвинения!",
+                    color=0xf8b952
+                )
+                embed.add_field(name='Администратор:', value=inter.author.mention)
+                embed.add_field(name='Участник:', value=member.mention)
+                embed.add_field(name='Снято варнов:', value=count)
+                embed.add_field(name='Количество варнов:', value=warning_count)
+                embed.set_footer(text=random.choice(footer), icon_url=inter.author.avatar)
+                await inter.response.send_message(embed=embed)
+
     @moderation.sub_command(name='clear', description='Как много мусора... Но я могу очистить его!')
+    @commands.has_permissions(manage_messages=True)
     async def clear(self, inter: disnake.ApplicationCommandInteraction, amount: int):
         if amount <= 0:
             m1 = disnake.Embed(title="⚠️ Произошла ошибка!", description="Произошла ошибка при исполнении команды.", color=0xff6969)

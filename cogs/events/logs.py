@@ -13,8 +13,6 @@ class LogsCog(commands.Cog):
         self.bot = bot
 
     def get_log_channel(self, guild):
-        connection = sqlite3.connect('Pixel.db')
-        cursor = connection.cursor()
         cursor.execute('SELECT channel_id FROM logs WHERE guild_id=?', (str(guild.id),))
         result = cursor.fetchone()
         if result:
