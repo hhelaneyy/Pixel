@@ -9,8 +9,7 @@ def is_blacklisted(ctx):
     result = cursor.fetchone()
 
     if result and result[0] == 1:
-        msg = 'User is blacklisted'
-        raise commands.CheckFailure(msg)
+        raise commands.CheckFailure(message='Вы были занесены в Чёрный Список бота и не можете взаимодействовать с командами.')
     return True
 
 def is_blacklisted_app(interaction):
@@ -18,8 +17,7 @@ def is_blacklisted_app(interaction):
     result = cursor.fetchone()
 
     if result and result[0] == 1:
-        msg = 'User is blacklisted'
-        raise commands.CheckFailure(msg)
+        raise commands.CheckFailure(message='Вы были занесены в Чёрный Список бота и не можете взаимодействовать с командами.')
     return True
 
 def setup(bot: commands.Bot):   

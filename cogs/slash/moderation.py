@@ -129,6 +129,58 @@ class ModCog(commands.Cog):
                 embed.set_footer(text=random.choice(footer), icon_url=inter.author.avatar)
                 await inter.response.send_message(embed=embed)
 
+    @moderation.sub_command(name='lockdown', description='Блокируйте все чаты ради безопасности!')
+    @commands.has_permissions(administrator=True)
+    async def lock(self, inter: disnake.ApplicationCommandInteraction):
+        await inter.response.defer()
+
+        guild = inter.guild
+        channels = await guild.fetch_channels()
+
+        cursor.execute('SELECT role_id FROM lkroles WHERE guild_id = ?', (guild.id,))
+        role_id = cursor.fetchone()
+
+        if role_id is None:
+            raise commands.CommandError(message='Роль, которой нужно запретить говорить, не найдена или полностью отсуствует.')
+        else:
+            role = guild.get_role(role_id[0])
+        if role:
+            for channel in channels:
+                await channel.set_permissions(role, send_messages=False)
+
+            E = disnake.Embed(title='🛑 На сервере введено чрезвычайное положение', color=0xff0000)
+            E.add_field(name='Что случилось?', value=f'```Администратор сервера запретил отправлять сообщения во все каналы для роли "{role.name}".```')
+            E.set_footer(text=random.choice(footer), icon_url=guild.icon)
+            await inter.followup.send(embed=E)
+        else:
+            raise commands.CommandError(message='Роль, которой нужно запретить говорить, не найдена или полностью отсуствует.')
+
+    @moderation.sub_command(name='unlock', description='Блокируйте все чаты ради безопасности!')
+    @commands.has_permissions(administrator=True)
+    async def unlock(self, inter: disnake.ApplicationCommandInteraction):
+        await inter.response.defer()
+
+        guild = inter.guild
+        channels = await guild.fetch_channels()
+
+        cursor.execute('SELECT role_id FROM lkroles WHERE guild_id = ?', (guild.id,))
+        role_id = cursor.fetchone()
+
+        if role_id is None:
+            raise commands.CommandError(message='Роль, которой нужно разрешить говорить, не найдена или полностью отсуствует.')
+        else:
+            role = guild.get_role(role_id[0])
+        if role:
+            for channel in channels:
+                await channel.set_permissions(role, send_messages=None)
+
+            E = disnake.Embed(title='🩷 Чрезвычайное положение отменено', color=0x8eff77)
+            E.add_field(name='Что случилось?', value=f'```Администратор сервера вновь разрешил общение в каналах сервера для роли "{role.name}".```')
+            E.set_footer(text=random.choice(footer), icon_url=guild.icon)
+            await inter.followup.send(embed=E)
+        else:
+            raise commands.CommandError(message='Роль, которой нужно разрешить говорить, не найдена или полностью отсуствует.')
+
     @moderation.sub_command(name='clear', description='Как много мусора... Но я могу очистить его!')
     @commands.has_permissions(manage_messages=True)
     async def clear(self, inter: disnake.ApplicationCommandInteraction, amount: int):

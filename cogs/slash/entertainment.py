@@ -2,7 +2,7 @@ import disnake
 from disnake.ext import commands
 import random
 import requests
-from core.utilities.embeds import footer, rp_desc
+from core.utilities.embeds import footer
 
 TENOR_API_KEY = 'AIzaSyDIzri_pLPwTV_49BI3sDGcgJPSQ6DD3-g'
 
@@ -11,7 +11,11 @@ class EntertainmentCog(commands.Cog):
         self.bot = bot
         self.proposals = {}
 
-    @commands.slash_command(description="Ммммм, эротика. То что нужно!")
+    @commands.slash_command(description='Веселью нет конца!')
+    async def entertainment(self, inter):
+        ...
+
+    @entertainment.sub_command(name='roleplay', description="Вырази свои чувства!")
     async def rp(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User, action: str = commands.Param(choices=["Hug / Обнять", "Kiss / Поцеловать", 'Feed / Накормить', "Pat / Погладить", "Slap / Пощёчина", 'Poke / Потыкать', "Punch / Ударить", "Bite / Укусить"], description='Выбор действия над участником.'), ping: str = commands.Param(choices=['Да', 'Нет'], description='Упомянуть участника или нет.')):
         author = inter.author
         nsfw_actions = ["Suck / Отсосать", 'Rape / Изнасиловать']
@@ -37,37 +41,33 @@ class EntertainmentCog(commands.Cog):
             data = response.json()
             gif_url = data['results'][0]['media_formats']['gif']['url']
         else:
-            await inter.response.send_message('Произошла ошибка при поиске гиф изображения.')
+            raise commands.CommandError(message='Произошла ошибка при поиске гиф изображения.')
         
         if user.id == author.id:
-            E = disnake.Embed(title='⚠️ Произошла ошибка.', description='Кажется, что пользователь был автором.', color=0xd7e363)
-            E.add_field(name='Что же не так?', value=f'```Вы не можете выполнить действие над самим собой.```')
-            E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
-            await inter.response.send_message(embed=E, ephemeral=True)
-            return
+            raise commands.CommandError(message='Вы не можете выразить свои чувства на самом себе. Вы же не самовлюблённый...')
 
         if action == "Hug / Обнять":
             if ping == 'Нет':
                 emb2 = disnake.Embed(title=f"**{author.name} обнял(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(embed=emb2)
             else:
                 emb2 = disnake.Embed(title=f"**{author.name} обнял(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(user.mention, embed=emb2)
 
         elif action == 'Feed / Накормить':
             if ping == 'Нет':
                 emb2 = disnake.Embed(title=f"**{author.name} накормил(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(embed = emb2)
             else:
                 emb2 = disnake.Embed(title=f"**{author.name} накормил(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(user.mention, embed = emb2)
 
         elif action == 'Poke / Потыкать':
@@ -75,12 +75,12 @@ class EntertainmentCog(commands.Cog):
                 if ping == 'Нет':
                     emb2 = disnake.Embed(title=f"**{author.name} потыкал(а) {user.name}**", color=disnake.Color.random())
                     emb2.set_image(url=gif_url)
-                    emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                    emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                     await inter.send(embed = emb2)
                 else:
                     emb2 = disnake.Embed(title=f"**{author.name} потыкал(а) {user.name}**", color=disnake.Color.random())
                     emb2.set_image(url=gif_url)
-                    emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                    emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                     await inter.send(user.mention, embed = emb2)
             else:
                 E = disnake.Embed(title='⚠️ Произошла ошибка', description='Проблемы с выполнением действия над пользователем.', color=disnake.Color.yellow())
@@ -92,78 +92,76 @@ class EntertainmentCog(commands.Cog):
             if ping == 'Нет':
                 emb2 = disnake.Embed(title=f"**{author.name} поцеловал(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(embed = emb2)
             else:
                 emb2 = disnake.Embed(title=f"**{author.name} поцеловал(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(user.mention, embed = emb2)
 
         elif action == "Pat / Погладить":
             if ping == 'Нет':
                 emb2 = disnake.Embed(title=f"**{author.name} погладил(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(embed = emb2)
             else:
                 emb2 = disnake.Embed(title=f"**{author.name} погладил(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(user.mention, embed = emb2)
 
         elif action == "Slap / Пощёчина":
             if ping == 'Нет':
                 emb2 = disnake.Embed(title=f"**{author.name} дал(а) пощёчину {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(embed = emb2)
             else:
                 emb2 = disnake.Embed(title=f"**{author.name} дал(а) пощёчину {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(user.mention, embed = emb2)
 
         elif action == "Punch / Ударить":
             if ping == 'Нет':
                 emb2 = disnake.Embed(title=f"**{author.name} ударил(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(embed = emb2)
             else:
                 emb2 = disnake.Embed(title=f"**{author.name} ударил(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(user.mention, embed = emb2)
 
         elif action == "Bite / Укусить":
             if ping == 'Нет':
                 emb2 = disnake.Embed(title=f"**{author.name} укусил(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(embed = emb2)
             else:
                 emb2 = disnake.Embed(title=f"**{author.name} укусил(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(user.mention, embed = emb2)
 
         elif action == "Feed / Накормить":
             if ping == 'Нет':
                 emb2 = disnake.Embed(title=f"**{author.name} накормил(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(embed = emb2)
             else:
                 emb2 = disnake.Embed(title=f"**{author.name} накормил(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(rp_desc), icon_url=author.avatar)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(user.mention, embed = emb2)
             
-    @commands.command(description="Покажу все декорации профиля.")
+    @entertainment.sub_command(name='design', description="Хотите взглянуть на оформление своего профиля?")
     async def decor(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User = None):
-        author = inter.author
-
         if user is None:
             user = inter.author
 
@@ -187,6 +185,29 @@ class EntertainmentCog(commands.Cog):
             pass
 
         await inter.send(embed=E)
+
+    @entertainment.sub_command(name='coinflip', description='Ну что, подбросим?')
+    async def coin(self, inter: disnake.ApplicationCommandInteraction, side: str = commands.Param(choices=['Орёл', 'Решка'])):
+        sd = ['Орёл', 'Решка']
+        result = ['Орёл', 'Решка']
+        rst = random.choice(result)
+        bot_side = random.choice(sd)
+
+        if bot_side == rst and side == rst:
+            E = disnake.Embed(title='💜 Монетка подброшена!', color=0xfff977)
+            E.add_field(name='Результат подбрасывания:', value=f'```Ого, а ты везунчик! Выпал: {rst}, твой выбор - {side}, мой выбор - {bot_side}. У нас ничья. <3```')
+            E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
+            await inter.response.send_message(embed=E)
+        elif bot_side == rst and side != rst:
+            E = disnake.Embed(title='💜 Монетка подброшена!', color=0xfff977)
+            E.add_field(name='Результат подбрасывания:', value=f'```Ха-ха, ты проиграл! Выпал: {rst}, твой выбор - {side}, мой выбор - {bot_side}. Моя правда. <3```')
+            E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
+            await inter.response.send_message(embed=E)
+        else:
+            E = disnake.Embed(title='💜 Монетка подброшена!', color=0xfff977)
+            E.add_field(name='Результат подбрасывания:', value=f'```Чёрт, ты выиграл... Выпал: {rst}, твой выбор - {side}, мой выбор - {bot_side}. Была не права, извиняюсь. <3```')
+            E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
+            await inter.response.send_message(embed=E)
 
 def setup(bot: commands.Bot):
     bot.add_cog(EntertainmentCog(bot))

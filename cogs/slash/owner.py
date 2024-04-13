@@ -32,7 +32,7 @@ class OwnerCog(commands.Cog):
             cursor.execute('INSERT OR REPLACE INTO blacklist VALUES (?, ?)', (user.id, blacklisted))
             conn.commit()
 
-            if user.id == self.bot.owner.id or user.id == 585427658775461909 or user.id == self.bot.user.id:
+            if user.id == self.bot.owner.id or user.id == self.bot.user.id:
                 await inter.response.send_message('⚠️ Этих пользователей нельзя занести в ЧС вечеринки..)', ephemeral=True)
                 return
             else:

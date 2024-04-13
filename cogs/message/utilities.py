@@ -35,14 +35,14 @@ class UtilitiesCog(commands.Cog):
         ]
 
         about_bot = [
-            f'\n🌌 | Версия обновления: __**CBT 1.4.1**__',
+            f'\n🌌 | Версия обновления: __**CBT 1.4.2**__',
             f'\n🏓 | Задержка: __**{round(self.bot.latency * float(1000))} мс**__',
             f'\n💾 | Количество команд: __**{commands}**__',
             f'\n🐚 | Количество серверов: __**{guilds}**__',
             f'\n👤 | Количество пользователей: __**{users}**__',
         ]
 
-        E = disnake.Embed(title='Статистика Пиксель, хи~', color=disnake.Color.random())
+        E = disnake.Embed(title='🩷 Статистика Пиксель, хи~', color=disnake.Color.random())
         E.add_field(name='> Основная информация', value=''.join(main))
         E.add_field(name='> Обо мне', value=''.join(about_bot), inline=False)
         E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)

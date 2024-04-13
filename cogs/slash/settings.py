@@ -56,6 +56,13 @@ cursor.execute('''
 ''')
 conn.commit()
 
+cursor.execute('''
+            CREATE TABLE IF NOT EXISTS lkroles (
+            guild_id INTEGER PRIMARY KEY,
+            role_id INTEGER
+        )
+''')
+
 class SettingsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -69,7 +76,6 @@ class SettingsCog(commands.Cog):
     @commands.has_permissions(administrator=True)
     async def logs(self, inter: disnake.ApplicationCommandInteraction, action: str = commands.Param(choices=['Установить/Изменить канал', 'Удалить канал']), channel: disnake.TextChannel = None):
         guild_id = inter.guild.id
-        author = inter.author
 
         if action == 'Установить/Изменить канал':
             if channel:
@@ -111,7 +117,6 @@ class SettingsCog(commands.Cog):
     async def auto_role(self, inter: disnake.ApplicationCommandInteraction, action: str = commands.Param(choices=['Установить/Изменить роль', 'Удалить роль']), *, role: disnake.Role = None):
         guild_id = inter.guild.id
         guild_name = inter.guild.name
-        author = inter.author
 
         if action == 'Установить/Изменить роль':
             if role:
@@ -147,6 +152,31 @@ class SettingsCog(commands.Cog):
             E.add_field(name='Ответ команды:', value=f'```Новые участники вечеринки больше не будут получать роль при посещении.```')
             E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
             await inter.response.send_message(embed=E)
+
+    @settings.sub_command(name='lockdown-role', description='А кому я собственно запрещу разговаривать?')
+    @commands.has_permissions(administrator=True)
+    async def ldrole(self, inter: disnake.ApplicationCommandInteraction, role: disnake.Role):
+        await inter.response.defer()
+
+        cursor.execute('SELECT role_id FROM lkroles WHERE guild_id = ?', (inter.guild.id,))
+        r1 = cursor.fetchone()
+
+        if r1:
+            cursor.execute('UPDATE lkroles SET role_id = ? WHERE guild_id = ?', (role.id, inter.guild.id))
+            conn.commit
+
+            E = disnake.Embed(title='🟢 Роль успешно назначена', color=0x8eff77)
+            E.add_field(name='Ответ команды:', value=f'```Теперь роль "{role.name}" будет подвержена блокировке (в каналах имеется в виду, а вы о чём подумали?).```')
+            E.set_footer(text=random.choice(footer), icon_url=inter.guild.icon)
+            await inter.followup.send(embed=E)
+        else:
+            cursor.execute('INSERT INTO lkroles (guild_id, role_id) VALUES (?, ?)', (inter.guild.id, role.id))
+            conn.commit()
+            
+            E = disnake.Embed(title='🟢 Роль успешно назначена', color=0x8eff77)
+            E.add_field(name='Ответ команды:', value=f'```Теперь роль "{role.name}" будет подвержена блокировке (в каналах имеется в виду, а вы о чём подумали?).```')
+            E.set_footer(text=random.choice(footer), icon_url=inter.guild.icon)
+            await inter.followup.send(embed=E)
 
     @settings.sub_command(name='prefix', description='Хотите придумать для меня позывной?')
     async def prefix(self, inter: disnake.ApplicationCommandInteraction, action: str = commands.Param(choices=['Установить/Изменить префикс', 'Удалить префикс']), *, prefix: str = None):
@@ -194,7 +224,6 @@ class SettingsCog(commands.Cog):
     async def thread(self, inter: disnake.ApplicationCommandInteraction, action: str = commands.Param(choices=['Установить новый канал', 'Удалить канал']), *, channel: disnake.TextChannel):
         guild_id = inter.guild.id
         guild_name = inter.guild.name
-        author = inter.author
 
         if action == 'Установить новый канал':
             cursor.execute('INSERT INTO autothread (guild_id, guild_name, channel_id) VALUES (?, ?, ?)', (guild_id, guild_name, channel.id))

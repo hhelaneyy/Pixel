@@ -71,7 +71,7 @@ class LogsCog(commands.Cog):
             role_id = cursor.fetchone()
 
             if role_id:
-                role = member.guild.get_role(role_id[0])
+                role = guild.get_role(role_id[0])
                 if role:
                     await member.add_roles(role)
 
