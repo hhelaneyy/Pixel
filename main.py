@@ -1,5 +1,4 @@
 import asyncio
-from pathlib import Path
 import sys
 import disnake
 from disnake.ext import commands

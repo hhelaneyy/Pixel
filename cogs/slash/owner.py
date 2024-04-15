@@ -28,6 +28,8 @@ class OwnerCog(commands.Cog):
     @owner.sub_command(name='blacklist', description='У нас завёлся плохой мальчик?')
     @commands.is_owner()
     async def blacklist(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User, blacklisted: bool = commands.Param(choices=[True, False])):
+        channel = await self.bot.fetch_channel(1228412432599482389)
+
         if blacklisted:
             cursor.execute('INSERT OR REPLACE INTO blacklist VALUES (?, ?)', (user.id, blacklisted))
             conn.commit()
@@ -37,6 +39,14 @@ class OwnerCog(commands.Cog):
                 return
             else:
                 await inter.response.send_message('✅', ephemeral=True)
+
+                E = disnake.Embed(color=0xff0000)
+                E.add_field(name='Нарушитель:', value=user.mention)
+                E.add_field(name='Действие:', value=f'```Положение статуса ЧС изменено на: {blacklisted}.```')
+                E.add_field(name='Причина:', value='```Нарушение политики использования Pixel.```', inline=False)
+                E.set_author(name=inter.author.name, icon_url=inter.author.avatar)
+                E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
+                await channel.send(embed=E)
 
         else:
             cursor.execute('DELETE FROM blacklist WHERE user_id = ?', (user.id,))

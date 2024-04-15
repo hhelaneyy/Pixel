@@ -137,7 +137,7 @@ class LogsCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_invite_create(self, invite: disnake.Invite):
-        channel = await self.bot.fetch_channel(1211298019866054678)
+        channel = self.get_log_channel(invite.guild)
         guild = invite.guild
 
         E = disnake.Embed(title='🌌 Создано новое приглашение на вечеринку!', color=0xdaa5ff)
