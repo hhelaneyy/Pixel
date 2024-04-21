@@ -3,3 +3,7 @@
 *.json
 discloud.config
 *.txt
+venv
+.idea
+*.xml
+*.iml
