@@ -17,7 +17,7 @@ class ErrorsCog(commands.Cog):
             if isinstance(e, commands.CommandNotFound):
                 return
             elif isinstance(e, commands.CommandInvokeError):
-                E = disnake.Embed(title='⚠️ Произошла ошибка!', color=0xb2f557)
+                E = disnake.Embed(title='❌ Ой-ой, ошибочка вышла!', color=0xb2f557)
                 E.add_field(name='Почему вечеринка прервалась?', value=f'```Я ещё не закончила делать уроки...```', inline=False)
                 E.add_field(name='Комментарий организатора вечеринки:', value='Эта ошибка возникает в разных случаях. Если вы с ней столкнулись, пожалуйста, сообщите о ней на [официальном сервере разработки Pixel.](https://discord.gg/vmu85FNsqs)')
                 E.set_footer(text=random.choice(footer), icon_url=self.bot.owner.avatar)
@@ -53,7 +53,7 @@ class ErrorsCog(commands.Cog):
             em = str(e)
 
             if isinstance(e, commands.CommandInvokeError):
-                E = disnake.Embed(title='⚠️ Ошибочка вышла!', color=0xb2f557)
+                E = disnake.Embed(title='❌ Ой-ой, ошибочка вышла!', color=0xb2f557)
                 E.add_field(name='Почему я вас динамлю?..', value=f'```Я ещё не закончила делать уроки...```', inline=False)
                 E.add_field(name='Комментарий организатора вечеринки:', value='Эта ошибка возникает в разных случаях. Если вы с ней столкнулись, пожалуйста, сообщите о ней на [официальном сервере разработки Pixel.](https://discord.gg/vmu85FNsqs)')
                 E.set_footer(text=random.choice(footer), icon_url=self.bot.owner.avatar)
