@@ -42,8 +42,8 @@ class ErrorsCog(commands.Cog):
                 em = str(e)
 
             timestamp = datetime.now()
-            m = disnake.Embed(title="❌ Ой-ой, ошибочка вышла!", color=0xff0000)
-            m.add_field(name="Почему я вас динамлю?..", value=f"{em}")
+            m = disnake.Embed(title="❌ Ой-ой, ошибочка вышла!", description=f'Произошла ошибка при использовании команды {inter.data.name}', color=0xff0000)
+            m.add_field(name="Почему я вас динамлю?..", value=f"```{em}```")
             m.set_footer(text=f"{random.choice(footer)} ∙ {timestamp.strftime(('%d.%m.%Y, %H:%M'))}", icon_url=self.bot.user.avatar.url)
             await inter.send(embed=m)
 
@@ -69,15 +69,12 @@ class ErrorsCog(commands.Cog):
                 em = "У вас недостаточно прав, чтобы использовать эту команду."
             elif isinstance(e, commands.MemberNotFound):
                 em = "Такого человека нет в списке гостей вашей вечеринки..."
-            elif isinstance(e, commands.CommandError):
-                d = f'Произошла ошибка при выполнении команды `{inter.invoked_with}`'
             else:
                 em = str(e)
-                d = "Произошла неизвестная ошибка, пожалуйста, сообщите о ней на [сервере технической поддержки.](https://discord.gg/vmu85FNsqs)"
 
             timestamp = datetime.now()
-            m = disnake.Embed(title="❌ Ой-ой, ошибочка вышла!", description=d, color=0xff0000)
-            m.add_field(name="Почему я вас динамлю?..", value=f"{em}")
+            m = disnake.Embed(title="❌ Ой-ой, ошибочка вышла!", description=f'Произошла ошибка при использовании команды {inter.data.name}', color=0xff0000)
+            m.add_field(name="Почему я вас динамлю?..", value=f"```{em}```")
             m.set_footer(text=f"{random.choice(footer)} ∙ {timestamp.strftime(('%d.%m.%Y, %H:%M'))}", icon_url=self.bot.user.avatar.url)
             await inter.send(embed=m, ephemeral=True)
 
