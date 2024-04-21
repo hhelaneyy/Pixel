@@ -27,11 +27,7 @@ class OpenaiCog(commands.Cog):
             await inter.followup.send(embed=embed)
 
         except Exception as e:
-            m1 = disnake.Embed(title="⚠️ Произошла ошибка.", description="Ваше местоположение...", color=0xff6969)
-            m1.add_field(name="Что же не так?", value=f"```Ваше местоположение не удовлетворяет условиям пользования технологией OpenAI.```")
-            m1.set_footer(text=f"Поддерживается благодаря {self.bot.owner.name}", icon_url=self.bot.owner.avatar.url)
-            await inter.followup.send(embed=m1, ephemeral=True)
-            return
+            raise commands.CommandError(message='Место полложение хостинга не удовлетворяет условиям использования OpenAI.')
         
 def setup(bot: commands.Bot):
     bot.add_cog(OpenaiCog(bot))

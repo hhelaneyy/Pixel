@@ -2,7 +2,7 @@ import disnake
 from disnake.ext import commands
 import random
 import requests
-from core.utilities.embeds import footer
+from core.utilities.embeds import footer, NSFW
 
 TENOR_API_KEY = 'AIzaSyDIzri_pLPwTV_49BI3sDGcgJPSQ6DD3-g'
 
@@ -16,7 +16,7 @@ class EntertainmentCog(commands.Cog):
         ...
 
     @entertainment.sub_command(name='roleplay', description="Вырази свои чувства!")
-    async def rp(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User, action: str = commands.Param(choices=["Hug / Обнять", "Kiss / Поцеловать", 'Feed / Накормить', "Pat / Погладить", "Slap / Пощёчина", 'Poke / Потыкать', "Punch / Ударить", "Bite / Укусить"], description='Выбор действия над участником.'), ping: str = commands.Param(choices=['Да', 'Нет'], description='Упомянуть участника или нет.')):
+    async def rp(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User, action: str = commands.Param(choices=["Hug / Обнять", "Kiss / Поцеловать", 'Feed / Накормить', "Pat / Погладить", "Slap / Пощёчина", 'Poke / Потыкать', "Punch / Ударить", "Bite / Укусить", 'Rape / Изнасиловать', 'Suck / Отсосать'], description='Выбор действия над участником.'), ping: str = commands.Param(choices=['Да', 'Нет'], description='Упомянуть участника или нет.')):
         author = inter.author
         nsfw_actions = ["Suck / Отсосать", 'Rape / Изнасиловать']
 
@@ -159,6 +159,21 @@ class EntertainmentCog(commands.Cog):
                 emb2.set_image(url=gif_url)
                 emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(user.mention, embed = emb2)
+
+        elif action == 'Rape / Изнасиловать':
+            if ping == 'Нет':
+                emb2 = disnake.Embed(title=f"**{author.name} изнасиловал(а) {user.name}**", color=disnake.Color.random())
+                emb2.set_image(url=random.choice(NSFW))
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
+                await inter.send(embed = emb2)
+            else:
+                emb2 = disnake.Embed(title=f"**{author.name} изнасиловал(а) {user.name}**", color=disnake.Color.random())
+                emb2.set_image(url=random.choice(NSFW))
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
+                await inter.send(user.mention, embed = emb2)
+
+        elif action == 'Suck / Отсосать':
+            raise commands.CommandError(message='Извините, но данное действие ещё не доступно для пользователей. <3')
             
     @entertainment.sub_command(name='design', description="Хотите взглянуть на оформление своего профиля?")
     async def decor(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User = None):
