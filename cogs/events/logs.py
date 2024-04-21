@@ -118,7 +118,6 @@ class LogsCog(commands.Cog):
             embed = disnake.Embed(title="🔴 Гость заблокирован.", color=0xd54e4e)
             embed.add_field(name="Никнейм участник:", value=f'{user.mention}')
             embed.add_field(name='Дата регистрации:', value=created_at_indicator)
-            embed.add_field(name='Причина:', value='???')
             embed.set_thumbnail(url=user.avatar)
             embed.set_footer(text=random.choice(footer), icon_url=guild.icon)
             await log_channel.send(embed=embed)
@@ -142,6 +141,7 @@ class LogsCog(commands.Cog):
 
         E = disnake.Embed(title='🌌 Создано новое приглашение на вечеринку!', color=0xdaa5ff)
         E.add_field(name='Новое приглашение:', value=invite.url)
+        E.add_field(name='Создатель приглашения:', value=invite.inviter)
         E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
         E.set_thumbnail(url=guild.icon)
         await channel.send(embed=E)
