@@ -1,6 +1,4 @@
-from datetime import datetime
-import os
-import random 
+import random
 from core.utilities.embeds import footer
 import sqlite3
 import disnake

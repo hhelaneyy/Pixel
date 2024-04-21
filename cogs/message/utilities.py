@@ -22,6 +22,10 @@ class UtilitiesCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    @commands.slash_command(description='Утилиты, а ты что думал?')
+    async def utilities(self, inter):
+        ...
+
     @commands.command()
     async def stats(self, inter: disnake.CommandInteraction):
         formatted_time = f"<t:{int(self.bot.start_time)}:R>"
@@ -35,7 +39,7 @@ class UtilitiesCog(commands.Cog):
         ]
 
         about_bot = [
-            f'\n🌌 | Версия обновления: __**Бета 1.0.0**__',
+            f'\n🌌 | Версия обновления: __**Бета 1.1.0**__',
             f'\n🏓 | Задержка: __**{round(self.bot.latency * float(1000))} мс**__',
             f'\n💾 | Количество команд: __**{commands}**__',
             f'\n🐚 | Количество серверов: __**{guilds}**__',
@@ -49,8 +53,9 @@ class UtilitiesCog(commands.Cog):
         E.set_thumbnail(url=self.bot.user.avatar)
         await inter.send(embed=E)
 
-    @commands.slash_command(name='server', description='Статистика вашего сервера.')
+    @utilities.sub_command(name='server', description='Статистика вашего сервера.')
     async def server(self, inter: disnake.ApplicationCommandInteraction):
+        #какой-то мусор (для вывода естественно)
         guild = inter.guild
         author = inter.author
         region = inter.guild.preferred_locale
@@ -124,6 +129,28 @@ class UtilitiesCog(commands.Cog):
             
         emb.set_thumbnail(url=guild.icon)
         await inter.response.send_message(embed = emb)
+
+    @utilities.sub_command(name='emoji', description='Укради эмодзи!')
+    @commands.has_permissions(manage_emojis=True)
+    async def steal(self, inter: disnake.ApplicationCommandInteraction, emoji: disnake.PartialEmoji, name: str = None):
+        guild = inter.guild
+
+        #читаем полученный эмодзи и его имя
+        emoji_bytes = await emoji.read()
+        emoji_name = name or emoji.name
+
+        #проверяем, есть ли на сервере эмодзи с похожим именем
+        if any(emoji_name.lower() == existing_emoji.name.lower() for existing_emoji in guild.emojis):
+            raise commands.CommandError(message='Это имя для эмодзи уже существует на этом сервере.')
+        else:
+            new_emoji = await guild.create_custom_emoji(name=emoji_name, image=emoji_bytes)
+            E = disnake.Embed(
+                title='💫 Эмодзи добавлен!',
+                color=0xb1ff98
+            )
+            E.add_field(name='Ответ команды:', value=f'```Эмодзи, который вы указали, был добавлен на эту вечеринку с именем {emoji_name}.```')
+            E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
+            await inter.response.send_message(embed=E)
     
     @commands.command(description='Помогу вывести информацию о всех пользователях Discord.')
     async def user(self, ctx, user: disnake.User = None):
@@ -133,6 +160,13 @@ class UtilitiesCog(commands.Cog):
         
         banner = await self.bot.fetch_user(user.id)
         created_at_indicator = f'<t:{int(user.created_at.timestamp())}:F>'
+
+        cursor.execute('SELECT prefix_name FROM prefix WHERE user_id = ?', (user.id,))
+        row = cursor.fetchone()
+        if row:
+            prefix = row[0]
+        else:
+            prefix = "px-"
 
         cursor.execute("SELECT * FROM blacklist WHERE user_id = ?", (user.id,))
         result = cursor.fetchone()
@@ -148,8 +182,14 @@ class UtilitiesCog(commands.Cog):
             f'**🚫  |  Чёрный список: __{blacklist}__**'
         )
 
+        settings = [
+            f'**⭐ | Префикс: __{prefix}__**',
+            f'**🩷 | Статус: __Скоро...__**'
+        ]
+
         emb = disnake.Embed(color=disnake.Color.random())
-        emb.add_field(name=None, value='\n'.join(all_info), inline=False)
+        emb.add_field(name='Общая ифнормация', value='\n'.join(all_info), inline=False)
+        emd.add_field(name='Используемые данные', value='\n'.join(settings), inline=False)
         emb.set_author(name=user.name, icon_url=user.avatar)
 
         if banner and banner.banner:
@@ -198,6 +238,13 @@ class UtilitiesCog(commands.Cog):
         created_at_indicator = f'<t:{int(user.created_at.timestamp())}:R>'
         joined_at_indicator = f'<t:{int(user.joined_at.timestamp())}:R>'
 
+        cursor.execute('SELECT prefix_name FROM prefix WHERE user_id = ?', (user.id,))
+        row = cursor.fetchone()
+        if row:
+            prefix = row[0]
+        else:
+            prefix = "px-"
+
         cursor.execute('SELECT age FROM ages WHERE user_id = ?', (user.id,))
         row = cursor.fetchone()
         if row:
@@ -224,7 +271,7 @@ class UtilitiesCog(commands.Cog):
         )
 
         database_info = (
-            f'**💾  |  Префикс: __Скоро...__**',
+            f'**💾  |  Префикс: __{prefix}__**',
             f'**🔞  |  Возраст: __{age}__**',
         )
 
@@ -284,23 +331,14 @@ class ProfileMenu(ui.View):
                 conn.commit()
             elif int(age_response.content) < 13:
                 await age_msg.delete()
-                embed = disnake.Embed(title="❌ Произошла ошибка!", description="Произошла неизвестная ошибка после выполнения команды.", color=disnake.Color.brand_red())
-                embed.add_field(name="От чего все проблемы?", value="```Ты как на платформе зарегистрировался, мальчик?```", inline=False)
-                embed.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
-                await inter.channel.send(embed=embed, delete_after=5)
+                raise commands.CommandError(message='Ты как на платформе зарегистрировался, мальчик?')
             elif int(age_response.content) > 100:
                 await age_msg.delete()
-                embed = disnake.Embed(title="❌ Произошла ошибка!", description="Произошла неизвестная ошибка после выполнения команды.", color=disnake.Color.brand_red())
-                embed.add_field(name="От чего все проблемы?", value="```Позвони мне на SCP-1576, а не через чат.```", inline=False)
-                embed.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
-                await inter.channel.send(embed=embed, delete_after=5)
+                raise commands.CommandError(message='Ты ветеран что-ли?')
 
         except asyncio.TimeoutError:
             await age_msg.delete()
-            embed = disnake.Embed(title="❌ Произошла ошибка!", description="Произошла неизвестная ошибка после выполнения команды.", color=disnake.Color.brand_red())
-            embed.add_field(name="От чего все проблемы?", value="```Вы не успели указать возраст.```", inline=False)
-            await inter.channel.send(embed=embed, delete_after=5)
-            return
+            raise commands.CommandError(message='Вы не успели указать возраст.')
 
 def setup(bot: commands.Bot):
     bot.add_cog(UtilitiesCog(bot))
