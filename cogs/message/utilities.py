@@ -46,12 +46,15 @@ class UtilitiesCog(commands.Cog):
             f'\n👤 | Количество пользователей: __**{users}**__',
         ]
 
-        E = disnake.Embed(title='🩷 Статистика Пиксель, хи~', color=disnake.Color.random())
-        E.add_field(name='> Основная информация', value=''.join(main))
-        E.add_field(name='> Обо мне', value=''.join(about_bot), inline=False)
-        E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
-        E.set_thumbnail(url=self.bot.user.avatar)
-        await inter.send(embed=E)
+        if inter.author.id == self.bot.owner.id:
+            E = disnake.Embed(title='🩷 Статистика Пиксель, хи~', color=disnake.Color.random())
+            E.add_field(name='> Основная информация', value=''.join(main))
+            E.add_field(name='> Обо мне', value=''.join(about_bot), inline=False)
+            E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
+            E.set_thumbnail(url=self.bot.user.avatar)
+            await inter.send(embed=E)
+        else:
+            raise commands.CommandError(message='Извините за недоразумение, но кажется, что эта команда находится на переработке. Пока что, вы не сможете использовать эту команду и нам очень жаль. Постараемся придумать к ней красивый дизайн как можно скорее!')
 
     @utilities.sub_command(name='server', description='Статистика вашего сервера.')
     async def server(self, inter: disnake.ApplicationCommandInteraction):
