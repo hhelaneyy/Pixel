@@ -30,7 +30,7 @@ class HelpCog(commands.Cog):
         slash_commands = self.get_slash_commands()
 
         view = HelpView(custom_commands, slash_commands)
-        embed = disnake.Embed(title='⭐ Помощника Pixel уже тут!', description="Потыкав на кнопочки вы сможете увидеть все мои команды! Если что-то интересует - спрашивай, я всегда готова ответить, хи~", color=disnake.Color.random())
+        embed = disnake.Embed(title='⭐ Помощница Pixel уже тут!', description="Потыкав на кнопочки вы сможете увидеть все мои команды! Если что-то интересует - спрашивай, я всегда готова ответить, хи~", color=disnake.Color.random())
         await ctx.send(embed=embed, view=view)
 
 class HelpView(ui.View):
