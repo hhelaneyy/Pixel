@@ -3,6 +3,7 @@ from disnake.ext import commands
 import random
 import requests
 from core.utilities.embeds import footer, NSFW
+from cogs.events.locale import Locale
 
 TENOR_API_KEY = 'AIzaSyDIzri_pLPwTV_49BI3sDGcgJPSQ6DD3-g'
 
@@ -10,22 +11,20 @@ class EntertainmentCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.proposals = {}
+        self.locale = Locale(bot)
 
     @commands.slash_command(description='Веселью нет конца!')
     async def entertainment(self, inter):
         ...
 
-    @entertainment.sub_command(name='roleplay', description="Вырази свои чувства!")
-    async def rp(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User, action: str = commands.Param(choices=["Hug / Обнять", "Kiss / Поцеловать", 'Feed / Накормить', "Pat / Погладить", "Slap / Пощёчина", 'Poke / Потыкать', "Punch / Ударить", "Bite / Укусить", 'Rape / Изнасиловать', 'Suck / Отсосать'], description='Выбор действия над участником.'), ping: str = commands.Param(choices=['Да', 'Нет'], description='Упомянуть участника или нет.')):
+    @entertainment.sub_command(name='roleplay', description="Вырази свои чувства! / Express your feelings!")
+    async def rp(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User, action: str = commands.Param(choices=["Hug / Обнять", "Kiss / Поцеловать", 'Feed / Накормить', "Pat / Погладить", "Slap / Пощёчина", 'Poke / Потыкать', "Punch / Ударить", "Bite / Укусить", 'Rape / Изнасиловать', 'Suck / Отсосать'], description='Выбор действия над участником.'), ping: str = commands.Param(choices=['Yes / Да', 'No / Нет'], description='Упомянуть участника или нет.')):
         author = inter.author
+        msg = await self.locale.get_translation(author.id, 'errors')
         nsfw_actions = ["Suck / Отсосать", 'Rape / Изнасиловать']
 
         if action == nsfw_actions and not inter.channel.nsfw():
-            E = disnake.Embed(title='⚠️ Произошла ошибка.', description='Публике нельзя на такое смотреть.', color=disnake.Color.yellow())
-            E.add_field(name='Что же не так?', value=f'```Данное действие запрещено использовать в чатах, где происходит основное общение.')
-            E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
-            await inter.response.send_message(embed=E, ephemeral=True)
-            return
+            raise commands.CommandError(message=msg[0])
 
         if action == 'Feed / Накормить':
             response = requests.get(f"https://tenor.googleapis.com/v2/search?q=anime_feed&key={TENOR_API_KEY}&media_filter=gif&limit=1&random=True")
@@ -46,86 +45,82 @@ class EntertainmentCog(commands.Cog):
         if user.id == author.id:
             raise commands.CommandError(message='Вы не можете выразить свои чувства на самом себе. Вы же не самовлюблённый...')
 
+        actions = await self.locale.get_translation(author.id, 'actions')
+
         if action == "Hug / Обнять":
-            if ping == 'Нет':
-                emb2 = disnake.Embed(title=f"**{author.name} обнял(а) {user.name}**", color=disnake.Color.random())
+            if ping == 'No / Нет':
+                emb2 = disnake.Embed(title=f"**{author.name} {actions[0]} {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
                 emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(embed=emb2)
             else:
-                emb2 = disnake.Embed(title=f"**{author.name} обнял(а) {user.name}**", color=disnake.Color.random())
+                emb2 = disnake.Embed(title=f"**{author.name} {actions[0]} {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
                 emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(user.mention, embed=emb2)
 
         elif action == 'Feed / Накормить':
-            if ping == 'Нет':
-                emb2 = disnake.Embed(title=f"**{author.name} накормил(а) {user.name}**", color=disnake.Color.random())
+            if ping == 'No / Нет':
+                emb2 = disnake.Embed(title=f"**{author.name} {actions[3]} {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
                 emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(embed = emb2)
             else:
-                emb2 = disnake.Embed(title=f"**{author.name} накормил(а) {user.name}**", color=disnake.Color.random())
+                emb2 = disnake.Embed(title=f"**{author.name} {actions[3]} {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
                 emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(user.mention, embed = emb2)
 
         elif action == 'Poke / Потыкать':
-            if author.id == self.bot.owner.id:
-                if ping == 'Нет':
-                    emb2 = disnake.Embed(title=f"**{author.name} потыкал(а) {user.name}**", color=disnake.Color.random())
-                    emb2.set_image(url=gif_url)
-                    emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
-                    await inter.send(embed = emb2)
-                else:
-                    emb2 = disnake.Embed(title=f"**{author.name} потыкал(а) {user.name}**", color=disnake.Color.random())
-                    emb2.set_image(url=gif_url)
-                    emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
-                    await inter.send(user.mention, embed = emb2)
-            else:
-                E = disnake.Embed(title='⚠️ Произошла ошибка', description='Проблемы с выполнением действия над пользователем.', color=disnake.Color.yellow())
-                E.add_field(name='Что же не так?', value=f'```Прошу прощения, но данное действие ещё не доступно для пользователей бота. Идёт бета-тестирование действия. Разработчик сообщит на официальном сервере разработки как только действие станет доступно.```')
-                E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
-                await inter.response.send_message(embed=E, ephemeral=True)
-
-        elif action == "Kiss / Поцеловать":
-            if ping == 'Нет':
-                emb2 = disnake.Embed(title=f"**{author.name} поцеловал(а) {user.name}**", color=disnake.Color.random())
+            if ping == 'No / Нет':
+                emb2 = disnake.Embed(title=f"**{author.name} потыкал(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
                 emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(embed = emb2)
             else:
-                emb2 = disnake.Embed(title=f"**{author.name} поцеловал(а) {user.name}**", color=disnake.Color.random())
+                emb2 = disnake.Embed(title=f"**{author.name} потыкал(а) {user.name}**", color=disnake.Color.random())
+                emb2.set_image(url=gif_url)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
+                await inter.send(user.mention, embed = emb2)
+
+        elif action == "Kiss / Поцеловать":
+            if ping == 'No / Нет':
+                emb2 = disnake.Embed(title=f"**{author.name} {actions[1]} {user.name}**", color=disnake.Color.random())
+                emb2.set_image(url=gif_url)
+                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
+                await inter.send(embed = emb2)
+            else:
+                emb2 = disnake.Embed(title=f"**{author.name} {actions[1]} {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
                 emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(user.mention, embed = emb2)
 
         elif action == "Pat / Погладить":
-            if ping == 'Нет':
-                emb2 = disnake.Embed(title=f"**{author.name} погладил(а) {user.name}**", color=disnake.Color.random())
+            if ping == 'No / Нет':
+                emb2 = disnake.Embed(title=f"**{author.name} {actions[4]} {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
                 emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(embed = emb2)
             else:
-                emb2 = disnake.Embed(title=f"**{author.name} погладил(а) {user.name}**", color=disnake.Color.random())
+                emb2 = disnake.Embed(title=f"**{author.name} {actions[4]} {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
                 emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(user.mention, embed = emb2)
 
         elif action == "Slap / Пощёчина":
-            if ping == 'Нет':
-                emb2 = disnake.Embed(title=f"**{author.name} дал(а) пощёчину {user.name}**", color=disnake.Color.random())
+            if ping == 'No / Нет':
+                emb2 = disnake.Embed(title=f"**{author.name} {actions[2]} {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
                 emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(embed = emb2)
             else:
-                emb2 = disnake.Embed(title=f"**{author.name} дал(а) пощёчину {user.name}**", color=disnake.Color.random())
+                emb2 = disnake.Embed(title=f"**{author.name} {actions[2]} {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
                 emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(user.mention, embed = emb2)
 
         elif action == "Punch / Ударить":
-            if ping == 'Нет':
+            if ping == 'No / Нет':
                 emb2 = disnake.Embed(title=f"**{author.name} ударил(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
                 emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
@@ -137,43 +132,31 @@ class EntertainmentCog(commands.Cog):
                 await inter.send(user.mention, embed = emb2)
 
         elif action == "Bite / Укусить":
-            if ping == 'Нет':
+            if ping == 'No / Нет':
                 emb2 = disnake.Embed(title=f"**{author.name} укусил(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
                 emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(embed = emb2)
             else:
                 emb2 = disnake.Embed(title=f"**{author.name} укусил(а) {user.name}**", color=disnake.Color.random())
-                emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
-                await inter.send(user.mention, embed = emb2)
-
-        elif action == "Feed / Накормить":
-            if ping == 'Нет':
-                emb2 = disnake.Embed(title=f"**{author.name} накормил(а) {user.name}**", color=disnake.Color.random())
-                emb2.set_image(url=gif_url)
-                emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
-                await inter.send(embed = emb2)
-            else:
-                emb2 = disnake.Embed(title=f"**{author.name} накормил(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=gif_url)
                 emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(user.mention, embed = emb2)
 
         elif action == 'Rape / Изнасиловать':
-            if ping == 'Нет':
+            if ping == 'No / Нет':
                 emb2 = disnake.Embed(title=f"**{author.name} изнасиловал(а) {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=random.choice(NSFW))
                 emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(embed = emb2)
             else:
-                emb2 = disnake.Embed(title=f"**{author.name} изнасиловал(а) {user.name}**", color=disnake.Color.random())
+                emb2 = disnake.Embed(title=f"**{author.name} {actions[5]} {user.name}**", color=disnake.Color.random())
                 emb2.set_image(url=random.choice(NSFW))
                 emb2.set_footer(text=random.choice(footer), icon_url=author.avatar)
                 await inter.send(user.mention, embed = emb2)
 
         elif action == 'Suck / Отсосать':
-            raise commands.CommandError(message='Извините, но данное действие ещё не доступно для пользователей. <3')
+            raise commands.CommandError(message=msg[1])
             
     @entertainment.sub_command(name='design', description="Хотите взглянуть на оформление своего профиля?")
     async def decor(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User = None):
