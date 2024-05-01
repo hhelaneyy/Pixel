@@ -3,9 +3,18 @@ import disnake
 from disnake.ext import commands
 import sqlite3
 from core.utilities.embeds import footer
+from cogs.events.locale import Locale
 
 conn = sqlite3.connect('Pixel.db')
 cursor = conn.cursor()
+
+cursor.execute('''
+            CREATE TABLE IF NOT EXISTS locales (
+            user_id TEXT PRIMARY KEY, 
+            language TEXT
+             )
+        ''')
+conn.commit()
 
 cursor.execute('''
                CREATE TABLE IF NOT EXISTS logs (
@@ -111,6 +120,20 @@ class SettingsCog(commands.Cog):
             E.add_field(name='Ответ команды:', value=f'```Изменения на этом сервере более не будут отображаться.```')
             E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
             await inter.response.send_message(embed=E)
+
+    @settings.sub_command(name='user-lang', description="Хочешь, будем общаться на французском? / Do you want us to communicate in French?")
+    async def set_lang(self, inter: disnake.ApplicationCommandInteraction, language: str = commands.Param(choices=['Русский', 'English'])):
+        language_code = "ru" if language.lower() == "русский" else "en"
+        cursor.execute("REPLACE INTO locales (user_id, language) VALUES (?, ?)",(str(inter.author.id), language_code))
+        conn.commit()
+
+        trans = await self.locale.get_translation(inter.author.id, 'locale')
+        footer = await self.locale.get_translation(inter.author.id, "footer")
+
+        E = disnake.Embed(title=trans[0], color=0x9bf8e0)
+        E.add_field(name=trans[1], value=f'```{trans[2].format(language=language)}```')
+        E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
+        await inter.response.send_message(embed=E, ephemeral=True)
 
     @settings.sub_command(name='autorole', description='Статусы для гостей? Как мило!')
     @commands.has_permissions(administrator=True)

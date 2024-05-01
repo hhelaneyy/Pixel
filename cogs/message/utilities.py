@@ -6,6 +6,7 @@ import disnake
 from disnake.ext import commands
 from disnake import ui
 from core.utilities.embeds import footer
+from cogs.events.locale import Locale
 
 conn = sqlite3.connect('Pixel.db')
 cursor = conn.cursor()
@@ -21,6 +22,7 @@ conn.commit()
 class UtilitiesCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.locale = Locale(bot)
 
     @commands.slash_command(description='Утилиты, а ты что думал?')
     async def utilities(self, inter):
@@ -33,28 +35,24 @@ class UtilitiesCog(commands.Cog):
         guilds = len(self.bot.guilds)
         users = len(self.bot.users)
 
+        stats = await self.locale.get_translation(inter.author.id, "stats")
+        footer = await self.locale.get_translation(inter.author.id, "footer")
+
         main = [
-            f'\n🕝 | Вечеринка длится: __**{formatted_time}**__',
-            f'\n🧑🏻‍💻 | Разработчик: __**{self.bot.owner.name}**__',
+            stats[2].format(formatted_time=formatted_time),
+            stats[3],
+            stats[4].format(latency=round(self.bot.latency * float(1000))),
+            stats[5].format(commands=commands),
+            stats[6].format(guilds=guilds),
+            stats[7].format(users=users)
         ]
 
-        about_bot = [
-            f'\n🌌 | Версия обновления: __**Бета 1.1.0**__',
-            f'\n🏓 | Задержка: __**{round(self.bot.latency * float(1000))} мс**__',
-            f'\n💾 | Количество команд: __**{commands}**__',
-            f'\n🐚 | Количество серверов: __**{guilds}**__',
-            f'\n👤 | Количество пользователей: __**{users}**__',
-        ]
-
-        if inter.author.id == self.bot.owner.id:
-            E = disnake.Embed(title='🩷 Статистика Пиксель, хи~', color=disnake.Color.random())
-            E.add_field(name='> Основная информация', value=''.join(main))
-            E.add_field(name='> Обо мне', value=''.join(about_bot), inline=False)
-            E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
-            E.set_thumbnail(url=self.bot.user.avatar)
-            await inter.send(embed=E)
-        else:
-            raise commands.CommandError(message='Извините за недоразумение, но кажется, что эта команда находится на переработке. Пока что, вы не сможете использовать эту команду и нам очень жаль. Постараемся придумать к ней красивый дизайн как можно скорее!')
+        E = disnake.Embed(title=stats[0], color=disnake.Color.random())
+        E.add_field(name=f'> {stats[1]}', value=''.join(main), inline=False)
+        E.set_author(name=self.bot.owner.name, icon_url=self.bot.owner.avatar)
+        E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
+        E.set_thumbnail(url=self.bot.user.avatar)
+        await inter.send(embed=E)
 
     @utilities.sub_command(name='server', description='Статистика вашего сервера.')
     async def server(self, inter: disnake.ApplicationCommandInteraction):
@@ -192,7 +190,7 @@ class UtilitiesCog(commands.Cog):
 
         emb = disnake.Embed(color=disnake.Color.random())
         emb.add_field(name='Общая ифнормация', value='\n'.join(all_info), inline=False)
-        emd.add_field(name='Используемые данные', value='\n'.join(settings), inline=False)
+        emb.add_field(name='Используемые данные', value='\n'.join(settings), inline=False)
         emb.set_author(name=user.name, icon_url=user.avatar)
 
         if banner and banner.banner:

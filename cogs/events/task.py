@@ -46,9 +46,9 @@ class EventsCog(commands.Cog):
             rdu = random.choice(users)
             rduu = rdu.name
 
-        await self.bot.change_presence(status=disnake.Status.online, activity=disnake.Activity(name=f'на {rduu}', type=disnake.ActivityType.watching))
+        await self.bot.change_presence(status=disnake.Status.online, activity=disnake.Activity(name=f'at {rduu}', type=disnake.ActivityType.watching))
         await asyncio.sleep(25)
-        await self.bot.change_presence(status=disnake.Status.online, activity=disnake.Activity(name=f'7 гайдов начать вечеринку', url='https://www.youtube.com/watch?v=ysFsS7ReTNc', type=disnake.ActivityType.streaming))
+        await self.bot.change_presence(status=disnake.Status.online, activity=disnake.Activity(name=f'7 guides to start a Party', url='https://www.youtube.com/watch?v=ysFsS7ReTNc', type=disnake.ActivityType.streaming))
         await asyncio.sleep(300)
 
     @status.before_loop
