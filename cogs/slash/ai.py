@@ -27,7 +27,7 @@ class OpenaiCog(commands.Cog):
             await inter.followup.send(embed=embed)
 
         except Exception as e:
-            raise commands.CommandError(message='Место полложение хостинга не удовлетворяет условиям использования OpenAI.')
+            raise commands.CommandError(message='Невозможно сгенерировать ответ. Обратитесь к главному разработчику для выяснения проблемы.')
         
 def setup(bot: commands.Bot):
     bot.add_cog(OpenaiCog(bot))
