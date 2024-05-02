@@ -2,7 +2,7 @@ import random
 import disnake
 from disnake.ext import commands
 import sqlite3
-from core.utilities.embeds import footer
+from cogs.events.locale import Locale
 
 conn = sqlite3.connect('Pixel.db')
 cursor = conn.cursor()
@@ -19,41 +19,46 @@ conn.commit()
 class ModCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.locale = Locale(bot)
 
     @commands.slash_command(description='Организатор дал мне право наказывать нарушителей. <3')
     async def moderation(self, inter):
         ...
 
-    @moderation.sub_command(name='ban', description='Организатор вечеринки разрешил мне банить плохишей <3')
+    @moderation.sub_command(name='ban', description='Мне разрешили банить людей..) / I was allowed to ban people..)')
     @commands.has_permissions(ban_members=True)
-    async def ban(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User, reason):
+    async def ban(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User, reason: str):
         guild = inter.guild
 
-        await guild.ban(user, reason)
-        E = disnake.Embed(title='🛑 Нарушитель был забанен', color=0xff0000)
-        E.add_field(name='Администратор:', value=inter.author.mention)
-        E.add_field(name='Нарушитель:', value=user.mention)
-        E.add_field(name='Причина:', value=reason)
+        footer = await self.locale.get_translation(inter.author.id, 'footer')
+        ban_translation = await self.locale.get_translation(inter.author.id, "ban")
+
+        await guild.ban(user, reason=reason)
+        E = disnake.Embed(title=ban_translation[0], color=0xff0000)
+        E.add_field(name=ban_translation[1], value=inter.author.mention)
+        E.add_field(name=ban_translation[2], value=user.mention)
+        E.add_field(name=ban_translation[3], value=reason)
         E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
         E.set_thumbnail(url=user.avatar)
         await inter.response.send_message(embed=E)
 
-    @moderation.sub_command(name='kick', description='Мне он не нравится, его я выгоняю!')
+    @moderation.sub_command(name='kick', description='Странный он... Кикну-ка я его. / He is strange... I will kick him.')
     @commands.has_permissions(kick_members=True)
-    async def kick(self, inter: disnake.ApplicationCommandInteraction, user: disnake.Member, reason):
+    async def kick(self, inter: disnake.ApplicationCommandInteraction, user: disnake.Member, reason: str):
         guild = inter.guild
 
-        await guild.kick(user, reason)
-        E = disnake.Embed(title='🔖 Нарушитель был кикнут', color=0xff0000)
-        E.add_field(name='Администратор:', value=inter.author.mention)
-        E.add_field(name='Нарушитель:', value=user.mention)
-        E.add_field(name='Причина:', value=reason)
+        footer = await self.locale.get_translation(inter.author.id, 'footer')
+        kick_translation = await self.locale.get_translation(inter.author.id, "kick")
+
+        await guild.kick(user, reason=reason)
+        E = disnake.Embed(title=kick_translation[0], color=0xff0000)
+        E.add_field(name=kick_translation[1], value=inter.author.mention)
+        E.add_field(name=kick_translation[2], value=user.mention)
+        E.add_field(name=kick_translation[3], value=reason)
         E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
         E.set_thumbnail(url=user.avatar)
         await inter.response.send_message(embed=E)
 
-    @moderation.sub_command(name='warn', description='Пожалуйста, не делай так больше!')
-    @commands.has_permissions(moderate_members=True)
     async def warn(self, inter: disnake.ApplicationCommandInteraction, member: disnake.Member, reason: str = None):
         cursor.execute('SELECT w_count FROM warns WHERE guild_name = ? AND user_id = ?', (inter.guild.name, member.id))
         row = cursor.fetchone()
@@ -72,24 +77,28 @@ class ModCog(commands.Cog):
             cursor.execute('UPDATE warns SET w_count = ? WHERE guild_name = ? AND user_id = ?', (count, inter.guild.name, member.id))
             conn.commit()
 
-        E = disnake.Embed(title='🚨 Участник вечеринки получил предупреждение!', color=0xf4a676)
-        E.add_field(name='Администратор:', value=inter.author.mention)
-        E.add_field(name='Нарушитель:', value=member.mention)
+        warn_translation = await self.locale.get_translation(inter.author.id, "warn")
+        footer = await self.locale.get_translation(inter.author.id, 'footer')
+
+        E = disnake.Embed(title=warn_translation[0], color=0xf4a676)
+        E.add_field(name=warn_translation[1], value=inter.author.mention)
+        E.add_field(name=warn_translation[2], value=member.mention)
         if reason:
-            E.add_field(name='Причина:', value=reason)
+            E.add_field(name=warn_translation[3], value=reason)
         else:
             pass
-        E.add_field(name='Количество варнов:', value=count)
+        E.add_field(name=warn_translation[4], value=count)
         E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
         await inter.response.send_message(embed=E)
 
-    @moderation.sub_command(name='unwarn', description='Я прощаю тебя.')
+    @moderation.sub_command(name='unwarn', description='Я прощаю тебя. / I forgive you.')
     @commands.has_permissions(moderate_members=True)
     async def unwarn(self, inter: disnake.ApplicationCommandInteraction, member: disnake.Member, count: int):
         if count <= 0:
-            raise commands.CommandError(message='Указано отрицательное значение количества или ноль.')
+            raise commands.CommandError(message=self.locale.get_translation(inter.author.id, "unwarn")[7])
         else:
-            cursor.execute('SELECT w_count FROM warns WHERE guild_name = ? AND user_id = ?', (inter.guild.name, member.id))
+            cursor.execute('SELECT w_count FROM warns WHERE guild_name = ? AND user_id = ?',
+                           (inter.guild.name, member.id))
             row = cursor.fetchone()
 
             if row:
@@ -98,41 +107,49 @@ class ModCog(commands.Cog):
                 warning_count = 0
 
             if warning_count == 0:
-                raise commands.CommandError(message='У пользователя нет варнов.')
+                raise commands.CommandError(message=self.locale.get_translation(inter.author.id, "unwarn")[8])
             if count >= warning_count:
                 cursor.execute('DELETE FROM warns WHERE guild_name = ? AND user_id = ?', (inter.guild.name, member.id))
                 conn.commit()
-                
+
+                footer = await self.locale.get_translation(inter.author.id, 'footer')
+                unwarn = self.locale.get_translation(inter.author.id, "unwarn")
+
                 embed1 = disnake.Embed(
-                    title="🎌 С пользователя сняты все обвинения!",
+                    title=unwarn[0],
                     color=0xf8b952
                 )
-                embed1.add_field(name='Администратор:', value=inter.author.mention)
-                embed1.add_field(name='Участник:', value=member.mention)
-                embed1.add_field(name='Снято варнов:', value='Все варны сняты')
-                embed1.add_field(name='Количество варнов:', value='0')
+                embed1.add_field(name=unwarn[2], value=inter.author.mention)
+                embed1.add_field(name=unwarn[3], value=member.mention)
+                embed1.add_field(name=unwarn[4], value=unwarn[6])
+                embed1.add_field(name=unwarn[5], value='0')
                 embed1.set_footer(text=random.choice(footer), icon_url=inter.author.avatar)
                 await inter.response.send_message(embed=embed1)
             else:
                 warning_count -= count
-                cursor.execute('UPDATE warns SET w_count = ? WHERE guild_name = ? AND user_id = ?', (warning_count, inter.guild.name, member.id))
+                cursor.execute('UPDATE warns SET w_count = ? WHERE guild_name = ? AND user_id = ?',
+                               (warning_count, inter.guild.name, member.id))
                 conn.commit()
 
                 embed = disnake.Embed(
-                    title="🎌 С пользователя сняты обвинения!",
+                    title=unwarn[1],
                     color=0xf8b952
                 )
-                embed.add_field(name='Администратор:', value=inter.author.mention)
-                embed.add_field(name='Участник:', value=member.mention)
-                embed.add_field(name='Снято варнов:', value=count)
-                embed.add_field(name='Количество варнов:', value=warning_count)
+                embed.add_field(name=unwarn[2],
+                                value=inter.author.mention)
+                embed.add_field(name=unwarn[3], value=member.mention)
+                embed.add_field(name=unwarn[4], value=count)
+                embed.add_field(name=unwarn[5], value=warning_count)
                 embed.set_footer(text=random.choice(footer), icon_url=inter.author.avatar)
                 await inter.response.send_message(embed=embed)
 
-    @moderation.sub_command(name='lockdown', description='Блокируйте все чаты ради безопасности!')
+    @moderation.sub_command(name='lockdown', description='Блокируйте все чаты ради безопасности! / Lock all chats for security!')
     @commands.has_permissions(administrator=True)
     async def lock(self, inter: disnake.ApplicationCommandInteraction):
         await inter.response.defer()
+        footer = await self.locale.get_translation(inter.author.id, 'footer')
+        lockdown = self.locale.get_translation(inter.author.id, "lockdown")
+        errors = self.locale.get_translation(inter.author, 'lockdown')
 
         guild = inter.guild
         channels = await guild.fetch_channels()
@@ -141,24 +158,25 @@ class ModCog(commands.Cog):
         role_id = cursor.fetchone()
 
         if role_id is None:
-            raise commands.CommandError(message='Роль, которой нужно запретить говорить, не найдена или полностью отсуствует.')
+            raise commands.CommandError(message=self.locale.get_translation(inter.author.id, "lockdown")[1])
         else:
             role = guild.get_role(role_id[0])
         if role:
             for channel in channels:
                 await channel.set_permissions(role, send_messages=False)
 
-            E = disnake.Embed(title='🛑 На сервере введено чрезвычайное положение', color=0xff0000)
-            E.add_field(name='Что случилось?', value=f'```Администратор сервера запретил отправлять сообщения во все каналы для роли "{role.name}".```')
+            E = disnake.Embed(title=lockdown[2], color=0xff0000)
+            E.add_field(name=lockdown[3], value=f'```{lockdown[4].format(role.name)}```')
             E.set_footer(text=random.choice(footer), icon_url=guild.icon)
             await inter.followup.send(embed=E)
         else:
-            raise commands.CommandError(message='Роль, которой нужно запретить говорить, не найдена или полностью отсуствует.')
+            raise commands.CommandError(message=errors[2])
 
-    @moderation.sub_command(name='unlock', description='Блокируйте все чаты ради безопасности!')
+    @moderation.sub_command(name='unlock', description='Разблокируйте все чаты ради безопасности! / Unlock all chats for safety!')
     @commands.has_permissions(administrator=True)
     async def unlock(self, inter: disnake.ApplicationCommandInteraction):
         await inter.response.defer()
+        footer = await self.locale.get_translation(inter.author.id, 'footer')
 
         guild = inter.guild
         channels = await guild.fetch_channels()
@@ -167,44 +185,37 @@ class ModCog(commands.Cog):
         role_id = cursor.fetchone()
 
         if role_id is None:
-            raise commands.CommandError(message='Роль, которой нужно разрешить говорить, не найдена или полностью отсуствует.')
+            raise commands.CommandError(message=self.locale.get_translation(inter.author.id, "errors")[3])
         else:
             role = guild.get_role(role_id[0])
         if role:
             for channel in channels:
                 await channel.set_permissions(role, send_messages=None)
 
-            E = disnake.Embed(title='🩷 Чрезвычайное положение отменено', color=0x8eff77)
-            E.add_field(name='Что случилось?', value=f'```Администратор сервера вновь разрешил общение в каналах сервера для роли "{role.name}".```')
+            E = disnake.Embed(title=self.locale.get_translation(inter.author.id, "unlock")[2], color=0x8eff77)
+            E.add_field(name=self.locale.get_translation(inter.author.id, "unlock")[3], value=f'```{self.locale.get_translation(inter.author.id, "unlock")[4].format(role.name)}```')
             E.set_footer(text=random.choice(footer), icon_url=guild.icon)
             await inter.followup.send(embed=E)
         else:
-            raise commands.CommandError(message='Роль, которой нужно разрешить говорить, не найдена или полностью отсуствует.')
+            raise commands.CommandError(message=self.locale.get_translation(inter.author.id, "errors")[3])
 
-    @moderation.sub_command(name='clear', description='Как много мусора... Но я могу очистить его!')
+    @moderation.sub_command(name='clear', description='Помогу вынести мусор! / Let me help you take out the trash!')
     @commands.has_permissions(manage_messages=True)
     async def clear(self, inter: disnake.ApplicationCommandInteraction, amount: int):
+        footer = await self.locale.get_translation(inter.author.id, 'footer')
         if amount <= 0:
-            m1 = disnake.Embed(title="⚠️ Произошла ошибка!", description="Произошла ошибка при исполнении команды.", color=0xff6969)
-            m1.add_field(name="От чего все проблемы?", value=f"```Вы указали отрицательное значение или ноль.```")
-            m1.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar.url)
-            await inter.response.send_message(embed=m1)
-            return
+            raise commands.CommandError(message=await self.locale.get_translation(inter.author.id, 'errors')[4])
         
         elif amount >= 75:
-            m1 = disnake.Embed(title="⚠️ Произошла ошибка!", description="Произошла ошибка при исполнении команды.", color=0xff6969)
-            m1.add_field(name="От чего все проблемы?", value=f"```Вы указали слишком большое значение.```")
-            m1.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar.url)
-            await inter.response.send_message(embed=m1)
-            return
+            raise commands.CommandError(message=await self.locale.get_translation(inter.author.id, 'errors')[5])
 
         messages = await inter.channel.history(limit=amount).flatten()
         messages = [msg for msg in messages if msg.id != inter.id]
         await inter.channel.delete_messages(messages)
 
-        embed = disnake.Embed(title="✨ Чат очищен!", description=f"Было вынесено **{amount}** пакетов мусора.", color=0x50c878)
+        embed = disnake.Embed(title=self.locale.get_translation(inter.author.id, "clear")[0], description=self.locale.get_translation(inter.author.id, "clear")[1].format(amount=amount), color=0x50c878)
         author = inter.author
-        embed.set_footer(text=f"Спасибо, что помог с уборкой, {author.name}! <3", icon_url=author.avatar.url)
+        embed.set_footer(text=random.choice(footer), icon_url=author.avatar.url)
         await inter.response.send_message(embed=embed, ephemeral=True)
 
 def setup(bot: commands.Bot):
