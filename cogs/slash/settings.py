@@ -75,9 +75,9 @@ cursor.execute('''
 class SettingsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.locale = Locale(bot)
 
     @commands.slash_command(description="Настрой-ка меня, Сен-пай u-u.")
-    @commands.has_permissions(administrator=True)
     async def settings(self, inter):
         ...    
 
@@ -124,7 +124,8 @@ class SettingsCog(commands.Cog):
     @settings.sub_command(name='user-lang', description="Хочешь, будем общаться на французском? / Do you want us to communicate in French?")
     async def set_lang(self, inter: disnake.ApplicationCommandInteraction, language: str = commands.Param(choices=['Русский', 'English'])):
         language_code = "ru" if language.lower() == "русский" else "en"
-        cursor.execute("REPLACE INTO locales (user_id, language) VALUES (?, ?)",(str(inter.author.id), language_code))
+        cursor.execute("REPLACE INTO locales (user_id, language) VALUES (?, ?)",
+                       (str(inter.author.id), language_code))
         conn.commit()
 
         trans = await self.locale.get_translation(inter.author.id, 'locale')
