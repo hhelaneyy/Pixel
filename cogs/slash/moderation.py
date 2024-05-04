@@ -149,7 +149,7 @@ class ModCog(commands.Cog):
         await inter.response.defer()
         footer = await self.locale.get_translation(inter.author.id, 'footer')
         lockdown = self.locale.get_translation(inter.author.id, "lockdown")
-        errors = self.locale.get_translation(inter.author, 'errors')
+        errors = self.locale.get_translation(inter.author.id, 'errors')
 
         guild = inter.guild
         channels = await guild.fetch_channels()
@@ -177,7 +177,7 @@ class ModCog(commands.Cog):
     async def unlock(self, inter: disnake.ApplicationCommandInteraction):
         await inter.response.defer()
         footer = await self.locale.get_translation(inter.author.id, 'footer')
-        errors = self.locale.get_translation(inter.author, 'errors')
+        errors = self.locale.get_translation(inter.author.id, 'errors')
         unlock = self.locale.get_translation(inter.author.id, "unlock")
 
         guild = inter.guild
@@ -205,7 +205,7 @@ class ModCog(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     async def clear(self, inter: disnake.ApplicationCommandInteraction, amount: int):
         footer = await self.locale.get_translation(inter.author.id, 'footer')
-        errors = self.locale.get_translation(inter.author, 'errors')
+        errors = self.locale.get_translation(inter.author.id, 'errors')
         clear = await self.locale.get_translation(inter.author.id, "clear")
         if amount <= 0:
             raise commands.CommandError(message=errors[4])
