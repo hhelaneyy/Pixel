@@ -54,9 +54,9 @@ class UtilitiesCog(commands.Cog):
         E.set_thumbnail(url=self.bot.user.avatar)
         await inter.send(embed=E)
 
-    @utilities.sub_command(name='server', description='Статистика вашего сервера.')
+    @utilities.sub_command(name='server', description='Статистика вашего сервера. / Your server stats.')
     async def server(self, inter: disnake.ApplicationCommandInteraction):
-        #какой-то мусор (для вывода естественно)
+        # Получаем данные о сервере
         guild = inter.guild
         author = inter.author
         region = inter.guild.preferred_locale
@@ -64,7 +64,7 @@ class UtilitiesCog(commands.Cog):
         mfa_lvl = inter.guild.mfa_level
         verification = inter.guild.verification_level
         max_members = inter.guild.max_members
-        roles = len(guild.roles)
+        roles_count = len(guild.roles)
         boost_role = inter.guild.premium_subscriber_role
         boosters = guild.premium_subscription_count
         boost_tier = guild.premium_tier
@@ -73,63 +73,66 @@ class UtilitiesCog(commands.Cog):
         text_channels = len(guild.text_channels)
         voice_channels = len(guild.voice_channels)
         emojis = len(guild.emojis)
-        stikers = len(guild.stickers)
+        stickers = len(guild.stickers)
 
-        if boost_progress == False:
-            boost_progress = 'Выключен'
-        if boost_progress == True:
-            boost_progress = 'Включен'
+        guild_info_translations = await self.locale.get_translation(inter.author.id, "guild_info")
+        roles_translations = await self.locale.get_translation(inter.author.id, "roles")
+        channels_and_boosts_translations = await self.locale.get_translation(inter.author.id, "channels_and_boosts")
+        other_translations = await self.locale.get_translation(inter.author.id, "other")
+        fields_translations = await self.locale.get_translation(inter.author.id, 'server_info_fields')
+        title_translations = await self.locale.get_translation(inter.author.id, 'server_info_title')
+        description_translation = await self.locale.get_translation(inter.author.id, 'server_info_description')
+        mfa_boost = await self.locale.get_translation(inter.author.id, 'mfa_boost')
 
-        if mfa_lvl == 0:
-            mfa_lvl = "Выключена"
-        else:
-            mfa_lvl= "Включена"
+        boost_progress_text = mfa_boost['boost_enabled'] if boost_progress else mfa_boost['boost_disabled']
+        mfa_lvl_text = mfa_boost['mfa_enabled'] if mfa_lvl else mfa_boost['mfa_disabled']
 
         about_guild = (
-            f'Владелец: **{guild.owner.name}**',
-            f'ID сервера: **{guild.id}**',
-            f'Регион: **{region}**',
-            f'Уровень проверки: **{verification}**',
-            f'Двухфакторная Аутентификация: **{mfa_lvl}**',
+            guild_info_translations["owner"].format(owner_name=guild.owner.name),
+            guild_info_translations["guild_id"].format(guild_id=guild.id),
+            guild_info_translations["region"].format(region=region),
+            guild_info_translations["verification_level"].format(verification=verification),
+            guild_info_translations["mfa_authentication"].format(mfa_lvl=mfa_lvl_text)
         )
 
         roles = (
-            f'Ролей: **{roles}**',
-            f'Ваша высшая роль: **{author.top_role.mention}**',
-            f'Роль поддержавших: **{boost_role.mention if boost_role else "Роль отсутствует."}**',
+            roles_translations["total_roles"].format(roles=roles_count),
+            roles_translations["highest_role"].format(top_role=author.top_role.mention),
+            roles_translations["boost_role"].format(boost_role=boost_role.mention if boost_role else "Not found.")
         )
 
         channels_and_boosts = (
-            f'Прогресс Бар: **{boost_progress}**',
-            f'Поддержавших: **{boosters or "Поддержавших нет."}**',
-            f'Уровень поддержки: **{boost_tier}**',
-            f'---------------------------------',
-            f'Всего каналов: **{channels}**',
-            f'Текстовых каналов: **{text_channels}**',
-            f'Голосовых каналов: **{voice_channels}**',
+            channels_and_boosts_translations["progress_bar"].format(boost_progress=boost_progress_text),
+            channels_and_boosts_translations["boosters"].format(boosters=boosters or "No one support this server."),
+            channels_and_boosts_translations["boost_tier"].format(boost_tier=boost_tier),
+            "---------------------------------",
+            channels_and_boosts_translations["channel_count"].format(channels=channels),
+            channels_and_boosts_translations["text_channels"].format(text_channels=text_channels),
+            channels_and_boosts_translations["voice_channels"].format(voice_channels=voice_channels)
         )
 
         other = (
-            f'Участников: **{members}**',
-            f'Стикеры: **{stikers}**',
-            f'Эмодзи: **{emojis}**',
-            f'Максимальное кол-во участников: **{max_members}**',
-            f'Ботов: **{len(([member for member in guild.members if member.bot]))}**',
+            other_translations["members"].format(members=members),
+            other_translations["stickers"].format(stickers=stickers),
+            other_translations["emojis"].format(emojis=emojis),
+            other_translations["max_members"].format(max_members=max_members),
+            other_translations["bots"].format(bot_count=len([member for member in guild.members if member.bot]))
         )
 
-        emb = disnake.Embed(title=f"Информация о сервере {guild.name}", description=guild.description or 'Описание отсутствует.', color=disnake.Color.random())
-        emb.add_field(name="> О сервере:", value='\n'.join(about_guild), inline=False)
-        emb.add_field(name="> Роли:", value='\n'.join(roles), inline=False)
-        emb.add_field(name="> Каналы и Бусты:", value='\n'.join(channels_and_boosts), inline=False)
-        emb.add_field(name="> Прочее:", value='\n'.join(other), inline=False)
+        emb = disnake.Embed(title=f"{title_translations.format(guild_name=guild.name)}",
+                            description=description_translation.format(guild_description=guild.description) or 'Description is None.',
+                            color=disnake.Color.random()
+                        )
+        emb.add_field(name=f"> {fields_translations['server']}", value='\n'.join(about_guild), inline=False)
+        emb.add_field(name=f"> {fields_translations['roles']}", value='\n'.join(roles), inline=False)
+        emb.add_field(name=f"> {fields_translations['channels_and_boosts']}", value='\n'.join(channels_and_boosts), inline=False)
+        emb.add_field(name=f"> {fields_translations['other']}", value='\n'.join(other), inline=False)
 
         if guild.banner:
             emb.set_image(url=guild.banner)
-        else:
-            pass
-            
+
         emb.set_thumbnail(url=guild.icon)
-        await inter.response.send_message(embed = emb)
+        await inter.response.send_message(embed=emb)
 
     @utilities.sub_command(name='emoji', description='Укради эмодзи!')
     @commands.has_permissions(manage_emojis=True)
@@ -201,8 +204,13 @@ class UtilitiesCog(commands.Cog):
         emb.set_thumbnail(url=user.avatar)
         await ctx.reply(embed=emb)
 
-    @commands.command(description="Информация об участнике сервера.")
+    @commands.command(description="Информация об участнике сервера. / Information about server member.")
     async def profile(self, inter: disnake.ApplicationCommandInteraction, user: disnake.Member | disnake.User = None):
+        blacklist_translation = await self.locale.get_translation(inter.author.id, "blacklist")
+        activity_translation = await self.locale.get_translation(inter.author.id, "activity")
+        bot_translation = await self.locale.get_translation(inter.author.id, "bot")
+        prefix_translation = await self.locale.get_translation(inter.author.id, "prefix")
+
         if user is None:
             user = inter.author
 
@@ -210,87 +218,88 @@ class UtilitiesCog(commands.Cog):
         result = cursor.fetchone()
 
         if result:
-            blacklist = 'Да'
+            blacklist = blacklist_translation[0]
         else:
-            blacklist = 'Нет'
+            blacklist = blacklist_translation[1]
 
-        activity = 'Активность отсутствует.'
-        bot = user.bot
-
-        if bot == True:
-            boy = 'Да'
+        if user.bot == 'True':
+            boy = bot_translation[0]
         else:
-            boy = 'Нет'
-        
-        if user.activity:
-            if user.activity.type == disnake.ActivityType.playing:
-                activity = f"🎮 Играет в {user.activity.name}"
-            elif user.activity.type == disnake.ActivityType.streaming:
-                activity = f"📟 Стримит {user.activity.name}"
-            elif user.activity.type == disnake.ActivityType.listening:
-                activity = f"🎧 Слушает {user.activity.name}"
-            elif user.activity.type == disnake.ActivityType.watching:
-                activity = f"👁️ Смотрит {user.activity.name}"
-            else:
-                activity = user.activity
-        
+            boy = bot_translation[1]
+
+        bot = bot_translation[int(user.bot)]
+
         banner = await self.bot.fetch_user(user.id)
 
         created_at_indicator = f'<t:{int(user.created_at.timestamp())}:R>'
         joined_at_indicator = f'<t:{int(user.joined_at.timestamp())}:R>'
 
+        cursor.execute('SELECT language FROM locales WHERE user_id = ?', (user.id,))
+        langg = cursor.fetchone()
+
+        if langg:
+            langg = langg[0]
+            if langg == 'ru':
+                lang = 'Русский'
+            elif langg == 'en':
+                lang = 'English'
+            else:
+                lang = 'Unknown language'
+        else:
+            lang = 'Unknown language'
+
         cursor.execute('SELECT prefix_name FROM prefix WHERE user_id = ?', (user.id,))
         row = cursor.fetchone()
-        if row:
-            prefix = row[0]
-        else:
-            prefix = "px-"
+        prefix = row[0] if row else prefix_translation
 
-        cursor.execute('SELECT age FROM ages WHERE user_id = ?', (user.id,))
+        '''cursor.execute('SELECT age FROM ages WHERE user_id = ?', (user.id,))
         row = cursor.fetchone()
-        if row:
-            age = row[0]
-        else:
-            age = "Не указан."
+        age = row[0] if row else age_not_specified_translation'''
 
-        user_info = (
-            f"**🪪  |  ID: __{user.id}__**",
-            f'**📔  |  В списке: __{created_at_indicator}__**',
-            f'**🔖  |  Статус: __Скоро...__**',
-            f'**🛑  |  Чёрный список: __{blacklist}__**',
+        user_info = await self.locale.get_translation(inter.author.id, "user_info")
+        other_info = await self.locale.get_translation(inter.author.id, "other_info")
+        babax_info = await self.locale.get_translation(inter.author.id, "babax_info")
+        database_info = await self.locale.get_translation(inter.author.id, "database_info")
+        profile = await self.locale.get_translation(inter.author.id, 'profile')
+
+        user_info_formatted = (
+            f"**{user_info[0].format(user_id=user.id)}**",
+            f"**{user_info[1].format(created_at_indicator=created_at_indicator)}**",
+            f"**{user_info[2]}**",
+            f"**{user_info[3].format(blacklist=blacklist)}**"
         )
 
-        other_info = (
-            f'**🎭  |  Высшая роль: __{user.top_role.mention}__**',
-            f'**🌌  |  Аватар: __[Открыть]({user.avatar.url})__**',
+        other_info_formatted = (
+            f"**{other_info[0].format(top_role_mention=user.top_role.mention)}**",
+            f"**{other_info[1].format(avatar_url=user.avatar.url)}**"
         )
 
-        babax_info = (
-            f'**📟  |  Положение: __{user.status}__**',
-            f'**🤖  |  Бот: __{boy}__**',
-            f'**⭐  |  Веселится: __{joined_at_indicator}__**',
+        babax_info_formatted = (
+            f"**{babax_info[0].format(status=user.status)}**",
+            f"**{babax_info[1].format(bot=boy)}**",
+            f"**{babax_info[2].format(joined_at_indicator=joined_at_indicator)}**"
         )
 
-        database_info = (
-            f'**💾  |  Префикс: __{prefix}__**',
-            f'**🔞  |  Возраст: __{age}__**',
+        database_info_formatted = (
+            f"**{database_info[0].format(prefix=prefix)}**",
+            f"**{database_info[1].format(lang=lang)}**"
         )
 
         if banner and banner.banner:
-            other_info += (f'**🎌  |  Баннер: __[Открыть]({banner.banner.url})__**', )
+            other_info_formatted += (f"**{other_info[2].format(banner_url=banner.banner.url)}**",)
 
-        view = ProfileMenu(self.bot, inter.author.id)
+        '''view = ProfileMenu(self.bot, inter.author.id)'''
 
-        if user.id != inter.author.id:
+        '''if user.id != inter.author.id:
             view.children = []
 
-            view.bot = self.bot
+            view.bot = self.bot'''
 
-        emb = disnake.Embed(title=f'Профиль участника {user.name}', description=activity, color=disnake.Color.random())
-        emb.add_field(name="> Всё об участнике", value='\n'.join(user_info), inline=False)  
-        emb.add_field(name='> Статистика пользователя', value='\n'.join(babax_info))
-        emb.add_field(name='> Прочее', value='\n'.join(other_info))
-        emb.add_field(name='> Общие сведения', value='\n'.join(database_info), inline=False) 
+        emb = disnake.Embed(title=f'{profile[0].format(user_name=user.name)}', color=disnake.Color.random())
+        emb.add_field(name=f"> {profile[1]}", value='\n'.join(user_info_formatted), inline=False)
+        emb.add_field(name=f'> {profile[2]}', value='\n'.join(babax_info_formatted))
+        emb.add_field(name=f'> {profile[3]}', value='\n'.join(other_info_formatted))
+        emb.add_field(name=f'> {profile[4]}', value='\n'.join(database_info_formatted), inline=False)
         emb.set_author(name=user.name, icon_url=user.avatar)
 
         if banner and banner.banner:
@@ -299,15 +308,16 @@ class UtilitiesCog(commands.Cog):
             return
         
         emb.set_thumbnail(url=user.avatar)
-        await inter.reply(embed=emb, view=view)
+        await inter.reply(embed=emb)
 
-class ProfileMenu(ui.View):
+'''class ProfileMenu(ui.View):
     def __init__(self, bot, author_id):
         super().__init__()
         self.timeout = 20
         self.age = None
         self.bot = bot
         self.author_id = author_id
+        self.locale = Locale(bot)
 
     async def interaction_check(self, interaction: disnake.MessageInteraction) -> bool:
         return interaction.user.id == self.author_id
@@ -315,8 +325,10 @@ class ProfileMenu(ui.View):
     @ui.button(label='Указать возраст', style=disnake.ButtonStyle.green)
     async def set_age(self, button: disnake.ui.Button, inter: disnake.MessageInteraction):
         await inter.response.defer()
+        count = await self.locale.get_translation(inter.author.id, 'count')
+        errors = await self.locale.get_translation(inter.author.id, 'errors')
         try:
-            age_msg = await inter.channel.send('У вас есть 20 секунд для указания возраста. Помни, что мы не принимаем на вечеринку тех, кто младше 13-ти лет и старше 99-ти.')
+            age_msg = await inter.channel.send(count)
 
             def check_age(m):
                 return m.author == inter.user and m.channel == age_msg.channel
@@ -332,14 +344,14 @@ class ProfileMenu(ui.View):
                 conn.commit()
             elif int(age_response.content) < 13:
                 await age_msg.delete()
-                raise commands.CommandError(message='Ты как на платформе зарегистрировался, мальчик?')
+                raise commands.CommandError(message=errors[8])
             elif int(age_response.content) > 100:
                 await age_msg.delete()
-                raise commands.CommandError(message='Ты ветеран что-ли?')
+                raise commands.CommandError(message=errors[7])
 
         except asyncio.TimeoutError:
             await age_msg.delete()
-            raise commands.CommandError(message='Вы не успели указать возраст.')
+            raise commands.CommandError(message=errors[6])'''
 
 def setup(bot: commands.Bot):
     bot.add_cog(UtilitiesCog(bot))

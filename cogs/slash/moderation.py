@@ -149,7 +149,7 @@ class ModCog(commands.Cog):
         await inter.response.defer()
         footer = await self.locale.get_translation(inter.author.id, 'footer')
         lockdown = self.locale.get_translation(inter.author.id, "lockdown")
-        errors = self.locale.get_translation(inter.author, 'lockdown')
+        errors = self.locale.get_translation(inter.author, 'errors')
 
         guild = inter.guild
         channels = await guild.fetch_channels()
@@ -158,7 +158,7 @@ class ModCog(commands.Cog):
         role_id = cursor.fetchone()
 
         if role_id is None:
-            raise commands.CommandError(message=self.locale.get_translation(inter.author.id, "lockdown")[1])
+            raise commands.CommandError(message=errors[2])
         else:
             role = guild.get_role(role_id[0])
         if role:
@@ -177,6 +177,8 @@ class ModCog(commands.Cog):
     async def unlock(self, inter: disnake.ApplicationCommandInteraction):
         await inter.response.defer()
         footer = await self.locale.get_translation(inter.author.id, 'footer')
+        errors = self.locale.get_translation(inter.author, 'errors')
+        unlock = self.locale.get_translation(inter.author.id, "unlock")
 
         guild = inter.guild
         channels = await guild.fetch_channels()
@@ -185,35 +187,37 @@ class ModCog(commands.Cog):
         role_id = cursor.fetchone()
 
         if role_id is None:
-            raise commands.CommandError(message=self.locale.get_translation(inter.author.id, "errors")[3])
+            raise commands.CommandError(message=errors[3])
         else:
             role = guild.get_role(role_id[0])
         if role:
             for channel in channels:
                 await channel.set_permissions(role, send_messages=None)
 
-            E = disnake.Embed(title=self.locale.get_translation(inter.author.id, "unlock")[2], color=0x8eff77)
-            E.add_field(name=self.locale.get_translation(inter.author.id, "unlock")[3], value=f'```{self.locale.get_translation(inter.author.id, "unlock")[4].format(role.name)}```')
+            E = disnake.Embed(title=unlock[2], color=0x8eff77)
+            E.add_field(name=unlock[3], value=f'```{unlock[4].format(role.name)}```')
             E.set_footer(text=random.choice(footer), icon_url=guild.icon)
             await inter.followup.send(embed=E)
         else:
-            raise commands.CommandError(message=self.locale.get_translation(inter.author.id, "errors")[3])
+            raise commands.CommandError(message=errors[3])
 
     @moderation.sub_command(name='clear', description='Помогу вынести мусор! / Let me help you take out the trash!')
     @commands.has_permissions(manage_messages=True)
     async def clear(self, inter: disnake.ApplicationCommandInteraction, amount: int):
         footer = await self.locale.get_translation(inter.author.id, 'footer')
+        errors = self.locale.get_translation(inter.author, 'errors')
+        clear = await self.locale.get_translation(inter.author.id, "clear")
         if amount <= 0:
-            raise commands.CommandError(message=await self.locale.get_translation(inter.author.id, 'errors')[4])
+            raise commands.CommandError(message=errors[4])
         
         elif amount >= 75:
-            raise commands.CommandError(message=await self.locale.get_translation(inter.author.id, 'errors')[5])
+            raise commands.CommandError(message=errors[5])
 
         messages = await inter.channel.history(limit=amount).flatten()
         messages = [msg for msg in messages if msg.id != inter.id]
         await inter.channel.delete_messages(messages)
 
-        embed = disnake.Embed(title=self.locale.get_translation(inter.author.id, "clear")[0], description=self.locale.get_translation(inter.author.id, "clear")[1].format(amount=amount), color=0x50c878)
+        embed = disnake.Embed(title=clear[0], description=clear[1].format(amount=amount), color=0x50c878)
         author = inter.author
         embed.set_footer(text=random.choice(footer), icon_url=author.avatar.url)
         await inter.response.send_message(embed=embed, ephemeral=True)
