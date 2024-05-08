@@ -91,6 +91,20 @@ class ModCog(commands.Cog):
         E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
         await inter.response.send_message(embed=E)
 
+    @moderation.sub_command(name='unban', description='Я миротворец. Прощаю всех. / I\'m a peacemaker. I forgive everyone.')
+    @commands.has_permissions(ban_members=True)
+    async def unban(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User):
+        guild = inter.guild
+        await guild.unban(user=user)
+
+        unban = await self.locale.get_translation(inter.author.id, 'unban')
+        footer = await self.locale.get_translation(inter.author.id, 'footer')
+
+        E = disnake.Embed(title=unban['title'], color=0x94f5c5)
+        E.add_field(name='', value=unban['field1'].format(user_mention=user.mention))
+        E.set_footer(text=random.choice(footer), icon_url=guild.icon)
+        await inter.response.send_message(embed=E)
+
     @moderation.sub_command(name='unwarn', description='Я прощаю тебя. / I forgive you.')
     @commands.has_permissions(moderate_members=True)
     async def unwarn(self, inter: disnake.ApplicationCommandInteraction, member: disnake.Member, count: int):
@@ -113,7 +127,7 @@ class ModCog(commands.Cog):
                 conn.commit()
 
                 footer = await self.locale.get_translation(inter.author.id, 'footer')
-                unwarn = self.locale.get_translation(inter.author.id, "unwarn")
+                unwarn = await self.locale.get_translation(inter.author.id, "unwarn")
 
                 embed1 = disnake.Embed(
                     title=unwarn[0],
@@ -148,8 +162,8 @@ class ModCog(commands.Cog):
     async def lock(self, inter: disnake.ApplicationCommandInteraction):
         await inter.response.defer()
         footer = await self.locale.get_translation(inter.author.id, 'footer')
-        lockdown = self.locale.get_translation(inter.author.id, "lockdown")
-        errors = self.locale.get_translation(inter.author.id, 'errors')
+        lockdown = await self.locale.get_translation(inter.author.id, "lockdown")
+        errors = await self.locale.get_translation(inter.author.id, 'errors')
 
         guild = inter.guild
         channels = await guild.fetch_channels()
@@ -177,8 +191,8 @@ class ModCog(commands.Cog):
     async def unlock(self, inter: disnake.ApplicationCommandInteraction):
         await inter.response.defer()
         footer = await self.locale.get_translation(inter.author.id, 'footer')
-        errors = self.locale.get_translation(inter.author.id, 'errors')
-        unlock = self.locale.get_translation(inter.author.id, "unlock")
+        errors = await self.locale.get_translation(inter.author.id, 'errors')
+        unlock = await self.locale.get_translation(inter.author.id, "unlock")
 
         guild = inter.guild
         channels = await guild.fetch_channels()
@@ -205,7 +219,7 @@ class ModCog(commands.Cog):
     @commands.has_permissions(manage_messages=True)
     async def clear(self, inter: disnake.ApplicationCommandInteraction, amount: int):
         footer = await self.locale.get_translation(inter.author.id, 'footer')
-        errors = self.locale.get_translation(inter.author.id, 'errors')
+        errors = await self.locale.get_translation(inter.author.id, 'errors')
         clear = await self.locale.get_translation(inter.author.id, "clear")
         if amount <= 0:
             raise commands.CommandError(message=errors[4])
