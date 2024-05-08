@@ -17,6 +17,13 @@ cursor.execute('''
 conn.commit()
 
 cursor.execute('''
+    CREATE TABLE IF NOT EXISTS voices (
+    guild_id INTEGER PRIMARY KEY,
+    channel_id INTEGER
+    )
+''')
+
+cursor.execute('''
                CREATE TABLE IF NOT EXISTS logs (
                guild_id INTEGER PRIMARY KEY,
                channel_id INTEGER
@@ -79,7 +86,11 @@ class SettingsCog(commands.Cog):
 
     @commands.slash_command(description="Настрой-ка меня, Сен-пай u-u.")
     async def settings(self, inter):
-        ...    
+        ...
+
+    @commands.slash_command(description='Организуйте мне голосовуху. / Organize a voice for me.')
+    async def voice(self, inter):
+        ...
 
     @settings.sub_command(name='logs', description='Буду пересматривать наш праздник вечность!')
     @commands.has_permissions(administrator=True)
@@ -120,6 +131,56 @@ class SettingsCog(commands.Cog):
             E.add_field(name='Ответ команды:', value=f'```Изменения на этом сервере более не будут отображаться.```')
             E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
             await inter.response.send_message(embed=E)
+
+    @voice.sub_command(name='create', description='Голосовой для голосовых? Звучит... странно. / Voice for voice? Sounds... weird.')
+    @commands.has_permissions(manage_channels=True)
+    async def create(self, inter: disnake.ApplicationCommandInteraction, channel_name: str = 'Создать голосовой канал'):
+        await inter.response.defer()
+        guild = inter.guild
+
+        abama = await guild.create_voice_channel(name=channel_name, user_limit=1)
+
+        cursor.execute('INSERT INTO voices (guild_id, channel_id) VALUES (?, ?)', (guild.id, abama.id))
+        conn.commit()
+
+        voice = await self.locale.get_translation(inter.author.id, 'voice_create')
+        footer = await self.locale.get_translation(inter.author.id, 'footer')
+
+        E = disnake.Embed(title=voice['title'], color=0xd0f594)
+        E.add_field(name='', value=voice['field'].format(channel_mention=abama.mention))
+        E.set_footer(text=random.choice(footer), icon_url=guild.icon)
+        await inter.followup.send(embed=E)
+
+    @voice.sub_command(name='join', description='Ну не будете же вы один сидеть, да? / Well, you won’t sit alone, right?')
+    async def allow(self, inter: disnake.ApplicationCommandInteraction, action: str = commands.Param(choices=['Разрешить вход / Allow join', 'Запретить вход / Deny join']), *, user: disnake.Member):
+        cursor.execute('SELECT user_id FROM user_voices WHERE guild_id = ?', (inter.guild.id,))
+        user_row = cursor.fetchone()
+        cursor.execute('SELECT channel_id FROM user_voices WHERE guild_id = ?', (inter.guild.id,))
+        channel_row = cursor.fetchone()
+
+        if user_row and channel_row:
+            user_id = user_row[0]
+            channel_id = channel_row[0]
+
+            chan_owner = user_id
+
+            voice = await self.locale.get_translation(inter.author.id, 'voice_allow_deny')
+
+            if action == 'Разрешить вход / Allow join':
+                if inter.author.id == chan_owner:
+                    chan = inter.guild.get_channel(channel_id)
+                    await chan.set_permissions(user, move_members=True)
+                    await inter.response.send_message(voice['allow'].format(user=user.mention, channel=chan.mention))
+                else:
+                    await inter.response.send_message(voice['no_channel'], ephemeral=True)
+
+            elif action == 'Запретить вход / Deny join':
+                if inter.author.id == chan_owner:
+                    chan = inter.guild.get_channel(channel_id)
+                    await chan.set_permissions(user, move_members=False)
+                    await inter.response.send_message(voice['deny'])
+                else:
+                    await inter.response.send_message(voice['no_channel'], ephemeral=True)
 
     @settings.sub_command(name='user-lang', description="Хочешь, будем общаться на французском? / Do you want us to communicate in French?")
     async def set_lang(self, inter: disnake.ApplicationCommandInteraction, language: str = commands.Param(choices=['Русский', 'English'])):
