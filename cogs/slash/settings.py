@@ -22,6 +22,17 @@ cursor.execute('''
     channel_id INTEGER
     )
 ''')
+conn.commit()
+
+cursor.execute('''
+    CREATE TABLE IF NOT EXISTS user_voices (
+    id INTEGER PRIMARY KEY,
+    guild_id INTEGER,
+    user_id INTEGER,
+    channel_id INTEGER
+    )
+''')
+conn.commit()
 
 cursor.execute('''
                CREATE TABLE IF NOT EXISTS logs (
@@ -134,53 +145,57 @@ class SettingsCog(commands.Cog):
 
     @voice.sub_command(name='create', description='Голосовой для голосовых? Звучит... странно. / Voice for voice? Sounds... weird.')
     @commands.has_permissions(manage_channels=True)
-    async def create(self, inter: disnake.ApplicationCommandInteraction, channel_name: str = 'Создать голосовой канал'):
+    async def create(self, inter: disnake.ApplicationCommandInteraction, action: str = commands.Param(choices=['Создать / Create', 'Удалить / Delete']), *, channel_name: str = 'Создать голосовой канал'):
         await inter.response.defer()
         guild = inter.guild
 
-        abama = await guild.create_voice_channel(name=channel_name, user_limit=1)
+        if action == 'Создать / Create':
+            chan = await guild.create_voice_channel(name=channel_name, user_limit=1)
 
-        cursor.execute('INSERT INTO voices (guild_id, channel_id) VALUES (?, ?)', (guild.id, abama.id))
-        conn.commit()
+            cursor.execute('INSERT INTO voices (guild_id, channel_id) VALUES (?, ?)', (guild.id, chan.id))
+            conn.commit()
 
-        voice = await self.locale.get_translation(inter.author.id, 'voice_create')
-        footer = await self.locale.get_translation(inter.author.id, 'footer')
+            voice = await self.locale.get_translation(inter.author.id, 'voice_create')
+            footer = await self.locale.get_translation(inter.author.id, 'footer')
 
-        E = disnake.Embed(title=voice['title'], color=0xd0f594)
-        E.add_field(name='', value=voice['field'].format(channel_mention=abama.mention))
-        E.set_footer(text=random.choice(footer), icon_url=guild.icon)
-        await inter.followup.send(embed=E)
+            E = disnake.Embed(title=voice['title'], color=0xd0f594)
+            E.add_field(name='', value=voice['field'].format(channel_mention=chan.mention))
+            E.set_footer(text=random.choice(footer), icon_url=guild.icon)
+            await inter.followup.send(embed=E)
+
+        else:
+            cursor.execute('SELECT channel_id FROM voices WHERE guild_id = ?', (guild.id,))
+            chan = cursor.fetchone()
+            chan2 = chan[0]
+
+            channel = guild.get_channel(chan2)
+            cursor.execute('DELETE FROM voices WHERE guild_id = ?', (guild.id,))
+            conn.commit()
+            await channel.delete()
+            await inter.followup.send('✅', ephemeral=True)
 
     @voice.sub_command(name='join', description='Ну не будете же вы один сидеть, да? / Well, you won’t sit alone, right?')
     async def allow(self, inter: disnake.ApplicationCommandInteraction, action: str = commands.Param(choices=['Разрешить вход / Allow join', 'Запретить вход / Deny join']), *, user: disnake.Member):
-        cursor.execute('SELECT user_id FROM user_voices WHERE guild_id = ?', (inter.guild.id,))
-        user_row = cursor.fetchone()
-        cursor.execute('SELECT channel_id FROM user_voices WHERE guild_id = ?', (inter.guild.id,))
+        cursor.execute('SELECT channel_id FROM user_voices WHERE guild_id = ? AND user_id = ?', (inter.guild.id, inter.author.id))
         channel_row = cursor.fetchone()
 
-        if user_row and channel_row:
-            user_id = user_row[0]
+        if channel_row:
             channel_id = channel_row[0]
-
-            chan_owner = user_id
 
             voice = await self.locale.get_translation(inter.author.id, 'voice_allow_deny')
 
             if action == 'Разрешить вход / Allow join':
-                if inter.author.id == chan_owner:
-                    chan = inter.guild.get_channel(channel_id)
-                    await chan.set_permissions(user, move_members=True)
-                    await inter.response.send_message(voice['allow'].format(user=user.mention, channel=chan.mention))
-                else:
-                    await inter.response.send_message(voice['no_channel'], ephemeral=True)
+                chan = inter.guild.get_channel(channel_id)
+                await chan.set_permissions(user, move_members=True, speak=True)
+                await inter.response.send_message(voice['allow'].format(user=user.mention, channel=chan.mention))
 
             elif action == 'Запретить вход / Deny join':
-                if inter.author.id == chan_owner:
-                    chan = inter.guild.get_channel(channel_id)
-                    await chan.set_permissions(user, move_members=False)
-                    await inter.response.send_message(voice['deny'])
-                else:
-                    await inter.response.send_message(voice['no_channel'], ephemeral=True)
+                chan = inter.guild.get_channel(channel_id)
+                await chan.set_permissions(user, move_members=False, speak=True)
+                await inter.response.send_message(voice['deny'])
+
+        else:
+            await inter.response.send_message(voice['no_channel'])
 
     @settings.sub_command(name='user-lang', description="Хочешь, будем общаться на французском? / Do you want us to communicate in French?")
     async def set_lang(self, inter: disnake.ApplicationCommandInteraction, language: str = commands.Param(choices=['Русский', 'English'])):

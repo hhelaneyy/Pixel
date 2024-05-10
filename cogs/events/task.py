@@ -73,11 +73,26 @@ class EventsCog(commands.Cog):
     async def on_voice_state_update(self, member: disnake.Member, before, after):
         cursor.execute('SELECT channel_id FROM voices WHERE guild_id = ?', (member.guild.id,))
         channel_id = cursor.fetchone()
-        user_chan = None
 
         if after.channel:
             if channel_id:
                 channel = await self.bot.fetch_channel(channel_id[0])
+                if after.channel.id != channel.id:
+                    return
+            else:
+                return
+        else:
+            user_chan_id = cursor.execute('SELECT channel_id FROM user_voices WHERE guild_id = ? AND user_id = ?', (member.guild.id, member.id)).fetchone()
+            if user_chan_id:
+                user_chan = await self.bot.fetch_channel(user_chan_id[0])
+                if user_chan:
+                    cursor.execute('DELETE FROM user_voices WHERE channel_id = ?', (user_chan.id,))
+                    conn.commit()
+                    await user_chan.delete()
+
+        user_chan = None
+
+        if after.channel:
             if after.channel.name == member.name and after.channel.category == channel.category:
                 user_chan = after.channel
             else:
@@ -87,17 +102,6 @@ class EventsCog(commands.Cog):
 
                 await member.move_to(user_chan)
                 await user_chan.set_permissions(member, manage_channels=True, connect=True)
-
-        else:
-            user_chan_id = cursor.execute('SELECT channel_id FROM user_voices WHERE guild_id = ? AND user_id = ?', (member.guild.id, member.id)).fetchone()
-            if user_chan_id:
-                user_chan = await self.bot.fetch_channel(user_chan_id[0])
-
-        if user_chan:
-            if len(user_chan.members) == 0:
-                cursor.execute('DELETE FROM user_voices WHERE channel_id = ?', (user_chan.id,))
-                conn.commit()
-                await user_chan.delete()
 
     @commands.Cog.listener()
     async def on_message(self, message: disnake.Message):
