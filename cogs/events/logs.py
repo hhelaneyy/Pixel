@@ -3,7 +3,7 @@ import random
 import disnake
 from disnake.ext import commands
 import sqlite3
-from core.utilities.embeds import footer
+from cogs.events.locale import Locale
 
 conn = sqlite3.connect('Pixel.db')
 cursor = conn.cursor()
@@ -11,6 +11,7 @@ cursor = conn.cursor()
 class LogsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.locale = Locale(bot)
 
     def get_log_channel(self, guild):
         cursor.execute('SELECT channel_id FROM logs WHERE guild_id=?', (str(guild.id),))
@@ -30,12 +31,16 @@ class LogsCog(commands.Cog):
             if before.content == after.content:
                 return
             else:
-                embed = disnake.Embed(title="🔖 Изменение сообщения.", color=0xfaee77)
-                embed.add_field(name="Автор:", value=f'{before.author.mention}')
-                embed.add_field(name="Канал:", value=f'{before.channel.mention}')
-                embed.add_field(name="Перейти к сообщению", value=f'[Сообщение]({after.jump_url})')
-                embed.add_field(name="Первоначальное сообщение:", value=f'```{before.content}```', inline=False)
-                embed.add_field(name="Изменено на:", value=f'```{after.content}```', inline=False)
+                change = await self.locale.get_translation(before.author.id, 'logs')
+                footer = await self.locale.get_translation(before.author.id, 'footer')
+                change_mes = change['change_message']
+
+                embed = disnake.Embed(title=change_mes['title'], color=0xfaee77)
+                embed.add_field(name=change_mes['author'], value=f'{before.author.mention}')
+                embed.add_field(name=change_mes['channel'], value=f'{before.channel.mention}')
+                embed.add_field(name=change_mes['go_message'], value=f'[{change_mes['message']}]({after.jump_url})')
+                embed.add_field(name=change_mes['before_message'], value=f'```{before.content}```', inline=False)
+                embed.add_field(name=change_mes['changed_to'], value=f'```{after.content}```', inline=False)
                 embed.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
                 await log_channel.send(embed=embed)
         else:
@@ -48,10 +53,15 @@ class LogsCog(commands.Cog):
             if before.author.bot or before.webhook_id:
                 return
             else:
-                embed = disnake.Embed(title="🛑 Удаление сообщения.", color=0xec9d4f)
-                embed.add_field(name="Автор:", value=f'{before.author.mention}')
-                embed.add_field(name="Канал:", value=f'{before.channel.mention}')
-                embed.add_field(name='Контент сообщения:', value=before.content, inline=False)
+                delete = await self.locale.get_translation(before.author.id, 'logs')
+                footer = await self.locale.get_translation(before.author.id, 'footer')
+                delete_mes = delete['delete_message']
+
+                embed = disnake.Embed(title=delete_mes['title'], color=0xec9d4f)
+                embed.add_field(name=delete_mes['author'], value=f'{before.author.mention}')
+                embed.add_field(name=delete_mes['deleter'], value=f'{deleter}')
+                embed.add_field(name=delete_mes['channel'], value=f'{before.channel.mention}')
+                embed.add_field(name=delete_mes['content'], value=before.content, inline=False)
                 embed.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
                 await log_channel.send(embed=embed)
         else:
@@ -59,23 +69,23 @@ class LogsCog(commands.Cog):
         
     @commands.Cog.listener()
     async def on_member_join(self, member: disnake.Member):
-        log_channel = self.get_log_channel(member.guild)
+        '''log_channel = self.get_log_channel(member.guild)
         guild_id = member.guild.id
         guild = member.guild
         created_at_indicator = f'<t:{int(member.created_at.timestamp())}:F>'
 
         if log_channel:
-            babax = await self.bot.fetch_user(member.id)
+            babax = await self.bot.fetch_user(member.id)'''
 
-            cursor.execute('SELECT role_id FROM auto_roles WHERE guild_id = ?', (guild_id,))
-            role_id = cursor.fetchone()
+        cursor.execute('SELECT role_id FROM auto_roles WHERE guild_id = ?', (guild_id,))
+        role_id = cursor.fetchone()
 
-            if role_id:
-                role = guild.get_role(role_id[0])
-                if role:
-                    await member.add_roles(role)
+        if role_id:
+            role = guild.get_role(role_id[0])
+            if role:
+                await member.add_roles(role)
 
-            embed = disnake.Embed(title="👤 Новый гость на вечеринке!", color=0x8bcdfe)
+            '''embed = disnake.Embed(title="👤 Новый гость на вечеринке!", color=0x8bcdfe)
             embed.add_field(name="Никнейм участник:", value=f'{member.mention}')
             embed.add_field(name='Дата регистрации:', value=created_at_indicator)
             embed.set_thumbnail(url=member.avatar)
@@ -87,9 +97,9 @@ class LogsCog(commands.Cog):
 
             embed.set_footer(text=random.choice(footer), icon_url=member.guild.icon)
 
-            await log_channel.send(embed=embed)
+            await log_channel.send(embed=embed)'''
 
-    @commands.Cog.listener()
+    '''@commands.Cog.listener()
     async def on_member_remove(self, member: disnake.Member):
         log_channel = self.get_log_channel(member.guild)
         created_at_indicator = f'<t:{int(member.created_at.timestamp())}:F>'
@@ -108,9 +118,9 @@ class LogsCog(commands.Cog):
 
             embed.set_footer(text=random.choice(footer), icon_url=member.guild.icon)
 
-            await log_channel.send(embed=embed)
+            await log_channel.send(embed=embed)'''
 
-    @commands.Cog.listener()
+    '''@commands.Cog.listener()
     async def on_member_ban(self, guild: disnake.Guild, user: disnake.User):
         log_channel = self.get_log_channel(guild)
         created_at_indicator = f'<t:{int(user.created_at.timestamp())}:F>'
@@ -120,9 +130,9 @@ class LogsCog(commands.Cog):
             embed.add_field(name='Дата регистрации:', value=created_at_indicator)
             embed.set_thumbnail(url=user.avatar)
             embed.set_footer(text=random.choice(footer), icon_url=guild.icon)
-            await log_channel.send(embed=embed)
+            await log_channel.send(embed=embed)'''
 
-    @commands.Cog.listener()
+    '''@commands.Cog.listener()
     async def on_member_unban(self, guild: disnake.Guild, user: disnake.User):
         log_channel = self.get_log_channel(guild)
         created_at_indicator = f'<t:{int(user.created_at.timestamp())}:F>'
@@ -132,9 +142,9 @@ class LogsCog(commands.Cog):
             embed.add_field(name='Дата регистрации:', value=created_at_indicator)
             embed.set_thumbnail(url=user.avatar)
             embed.set_footer(text=random.choice(footer), icon_url=guild.icon)
-            await log_channel.send(embed=embed)
+            await log_channel.send(embed=embed)'''
 
-    @commands.Cog.listener()
+    '''@commands.Cog.listener()
     async def on_invite_create(self, invite: disnake.Invite):
         channel = self.get_log_channel(invite.guild)
         guild = invite.guild
@@ -144,7 +154,7 @@ class LogsCog(commands.Cog):
         E.add_field(name='Создатель приглашения:', value=invite.inviter)
         E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
         E.set_thumbnail(url=guild.icon)
-        await channel.send(embed=E)
+        await channel.send(embed=E)'''
 
 def setup(bot: commands.Bot):
     bot.add_cog(LogsCog(bot))
