@@ -172,7 +172,7 @@ class ModCog(commands.Cog):
         role_id = cursor.fetchone()
 
         if role_id is None:
-            raise commands.CommandError(message=errors[2])
+            raise commands.CommandError(message=errors['deny_role'])
         else:
             role = guild.get_role(role_id[0])
         if role:
@@ -184,7 +184,7 @@ class ModCog(commands.Cog):
             E.set_footer(text=random.choice(footer), icon_url=guild.icon)
             await inter.followup.send(embed=E)
         else:
-            raise commands.CommandError(message=errors[2])
+            raise commands.CommandError(message=errors['deny_role'])
 
     @moderation.sub_command(name='unlock', description='Разблокируйте все чаты ради безопасности! / Unlock all chats for safety!')
     @commands.has_permissions(administrator=True)
@@ -201,7 +201,7 @@ class ModCog(commands.Cog):
         role_id = cursor.fetchone()
 
         if role_id is None:
-            raise commands.CommandError(message=errors[3])
+            raise commands.CommandError(message=errors['allow_role'])
         else:
             role = guild.get_role(role_id[0])
         if role:
@@ -213,7 +213,7 @@ class ModCog(commands.Cog):
             E.set_footer(text=random.choice(footer), icon_url=guild.icon)
             await inter.followup.send(embed=E)
         else:
-            raise commands.CommandError(message=errors[3])
+            raise commands.CommandError(message=errors['allow_role'])
 
     @moderation.sub_command(name='clear', description='Помогу вынести мусор! / Let me help you take out the trash!')
     @commands.has_permissions(manage_messages=True)
@@ -222,10 +222,10 @@ class ModCog(commands.Cog):
         errors = await self.locale.get_translation(inter.author.id, 'errors')
         clear = await self.locale.get_translation(inter.author.id, "clear")
         if amount <= 0:
-            raise commands.CommandError(message=errors[4])
+            raise commands.CommandError(message=errors['negative_number'])
         
         elif amount >= 75:
-            raise commands.CommandError(message=errors[5])
+            raise commands.CommandError(message=errors['bigger_75'])
 
         messages = await inter.channel.history(limit=amount).flatten()
         messages = [msg for msg in messages if msg.id != inter.id]

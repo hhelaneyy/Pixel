@@ -172,7 +172,7 @@ class EntertainmentCog(commands.Cog):
         ava = f'[{decor[1]}]({user.display_avatar.url})' if user.avatar else ""
         warn = f'{decor[2]}' if banner.banner else ""
 
-        E = disnake.Embed(description=f'{ava} {bann} \n\n{warn}', color=disnake.Color.random())
+        E = disnake.Embed(description=f'{ava} | {bann} \n\n{warn}', color=disnake.Color.random())
         E.set_author(name=user.name, icon_url=user.display_avatar)
         E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
 
@@ -186,7 +186,7 @@ class EntertainmentCog(commands.Cog):
         if banner is None:
             pass
 
-        await inter.send(embed=E)
+        await inter.response.send_message(embed=E)
 
     @entertainment.sub_command(name='coinflip', description='Ну что, подбросим? / Well, shall we flip?')
     async def coin(self, inter: disnake.ApplicationCommandInteraction, side: str = commands.Param(choices=['Heads / Орёл', 'Tails / Решка'])):
