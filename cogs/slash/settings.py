@@ -52,14 +52,6 @@ cursor.execute('''
 conn.commit()
 
 cursor.execute('''
-               CREATE TABLE IF NOT EXISTS prefix (
-               user_id INTEGER PRIMARY KEY,
-               prefix_name TEXT
-               )
-               ''')
-conn.commit()
-
-cursor.execute('''
          CREATE TABLE IF NOT EXISTS autothread (
                id INTEGER PRIMARY KEY,
                guild_id INTEGER NOT NULL,
@@ -145,9 +137,16 @@ class SettingsCog(commands.Cog):
 
     @voice.sub_command(name='create', description='Голосовой для голосовых? Звучит... странно. / Voice for voice? Sounds... weird.')
     @commands.has_permissions(manage_channels=True)
-    async def create(self, inter: disnake.ApplicationCommandInteraction, action: str = commands.Param(choices=['Создать / Create', 'Удалить / Delete']), *, channel_name: str = 'Создать голосовой канал'):
+    async def create(self, inter: disnake.ApplicationCommandInteraction, action: str = commands.Param(choices=['Создать / Create', 'Удалить / Delete']), *, channel_name: str = None):
         await inter.response.defer()
         guild = inter.guild
+        errors = await self.locale.get_translation(inter.author.id, 'errors')
+
+        cursor.execute('SELECT channel_id FROM voices WHERE guild_id = ?', (guild.id,))
+        channel = cursor.fetchone()
+
+        if channel:
+            raise commands.CommandError(message=errors['channel_alredy'])
 
         if action == 'Создать / Create':
             chan = await guild.create_voice_channel(name=channel_name, user_limit=1)
@@ -277,47 +276,6 @@ class SettingsCog(commands.Cog):
             E.add_field(name='Ответ команды:', value=f'```Теперь роль "{role.name}" будет подвержена блокировке (в каналах имеется в виду, а вы о чём подумали?).```')
             E.set_footer(text=random.choice(footer), icon_url=inter.guild.icon)
             await inter.followup.send(embed=E)
-
-    @settings.sub_command(name='prefix', description='Хотите придумать для меня позывной?')
-    async def prefix(self, inter: disnake.ApplicationCommandInteraction, action: str = commands.Param(choices=['Установить/Изменить префикс', 'Удалить префикс']), *, prefix: str = None):
-        if action == 'Установить/Изменить префикс':
-            if prefix:
-                cursor.execute('SELECT prefix_name FROM prefix WHERE user_id = ?', (inter.author.id, ))
-                prefix_name = cursor.fetchone()
-
-            if prefix_name:
-                cursor.execute('UPDATE prefix SET prefix_name = ? WHERE user_id = ?', (prefix, inter.author.id))
-                conn.commit()
-
-                titl = '🔄️ Префикс переопределён.'
-                act = f'{prefix} был установлен, как новый префикс для вас.'
-                clr = 0xF2FC58
-            else:
-                cursor.execute('INSERT INTO prefix (user_id, prefix_name) VALUES (?, ?)', (inter.author.id, prefix))
-                conn.commit()
-
-                titl = '✅ Авто-роль установлена.'
-                act = f'Теперь, при помощи {prefix} вы сможете использовать мои команды.'
-                clr = 0x84FE9A
-
-            E = disnake.Embed(title=titl, color=clr)
-            E.add_field(name='Установленный префикс:', value=prefix, inline=False)
-            E.add_field(name='Действие:', value=act)
-            E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
-            await inter.response.send_message(embed=E, ephemeral=True)
-
-        elif action == 'Удалить префикс' and prefix is None:
-            cursor.execute('SELECT prefix_name FROM prefix WHERE user_id = ?', (inter.author.id, ))
-            prefix_n1 = cursor.fetchone()
-
-            if prefix_n1:
-                cursor.execute('DELETE FROM prefix WHERE user_id = ?', (inter.author.id,))
-                conn.commit()
-
-                E = disnake.Embed(title='🚫 Префикс удален.', color=0xe52f07)
-                E.add_field(name='Ответ команды:', value=f'```Отныне основной префикс вновь px-```')
-                E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
-                await inter.response.send_message(embed=E, ephemeral=True)
 
     @settings.sub_command(name='autothread', description='Автоматические ветки? Звучит хайпово!')
     @commands.has_permissions(manage_channels=True)

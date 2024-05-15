@@ -28,7 +28,7 @@ class UtilitiesCog(commands.Cog):
     async def utilities(self, inter):
         ...
 
-    @commands.command()
+    @utilities.sub_command(name='statistics', description='Моё самочувствие / My health')
     async def stats(self, inter: disnake.CommandInteraction):
         formatted_time = f"<t:{int(self.bot.start_time)}:R>"
         commands = len(inter.bot.commands) + len(inter.bot.slash_commands)
@@ -119,10 +119,7 @@ class UtilitiesCog(commands.Cog):
             other_translations["bots"].format(bot_count=len([member for member in guild.members if member.bot]))
         )
 
-        emb = disnake.Embed(title=f"{title_translations.format(guild_name=guild.name)}",
-                            description=description_translation.format(guild_description=guild.description) or 'Description is None.',
-                            color=disnake.Color.random()
-                        )
+        emb = disnake.Embed(title=f"{title_translations.format(guild_name=guild.name)}", description=description_translation.format(guild_description=guild.description) or 'Description is None.', сolor=disnake.Color.random())
         emb.add_field(name=f"> {fields_translations['server']}", value='\n'.join(about_guild), inline=False)
         emb.add_field(name=f"> {fields_translations['roles']}", value='\n'.join(roles), inline=False)
         emb.add_field(name=f"> {fields_translations['channels_and_boosts']}", value='\n'.join(channels_and_boosts), inline=False)
@@ -156,9 +153,9 @@ class UtilitiesCog(commands.Cog):
             E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
             await inter.response.send_message(embed=E)
     
-    @commands.command(description='Помогу вывести информацию о всех пользователях Discord.')
-    async def user(self, ctx, user: disnake.User = None):
-        author = ctx.author
+    @utilities.sub_command(name='user', description='Помогу вывести информацию о всех пользователях Discord.')
+    async def user(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User = None):
+        author = inter.author
         if user is None:
             user = author
         
@@ -202,9 +199,9 @@ class UtilitiesCog(commands.Cog):
             return
         
         emb.set_thumbnail(url=user.avatar)
-        await ctx.reply(embed=emb)
+        await inter.response.send_message(embed=emb)
 
-    @commands.command(description="Информация об участнике сервера. / Information about server member.")
+    @utilities.sub_command(description="Информация об участнике сервера. / Information about server member.")
     async def profile(self, inter: disnake.ApplicationCommandInteraction, user: disnake.Member | disnake.User = None):
         blacklist_translation = await self.locale.get_translation(inter.author.id, "blacklist")
         activity_translation = await self.locale.get_translation(inter.author.id, "activity")
