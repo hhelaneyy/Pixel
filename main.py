@@ -17,23 +17,7 @@ with open('config.json') as f:
     openai.api_key = data['gpt_token']
 
 intents = disnake.Intents.all()
-bot = commands.Bot(command_prefix=None, help_command=None, intents=intents)
-
-@bot.event
-async def on_message(message: disnake.Message):
-    default_prefix = 'px-'
-    cursor.execute('SELECT prefix_name FROM prefix WHERE user_id = ?', (message.author.id, ))
-    prefix = cursor.fetchone()
-
-    if prefix:
-        bot.command_prefix = prefix[0]
-    else:
-        bot.command_prefix = default_prefix
-
-        cursor.execute('INSERT OR IGNORE INTO prefix (user_id, prefix_name) VALUES (?, ?)', (message.author.id, default_prefix))
-        conn.commit()
-
-    await bot.process_commands(message)
+bot = commands.Bot(command_prefix='px-', help_command=None, intents=intents)
 
 @bot.event
 async def on_ready():

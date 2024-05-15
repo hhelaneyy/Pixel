@@ -5,6 +5,7 @@ from disnake.ext import commands
 from disnake import ui
 from typing import List
 
+'''
 class HelpCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -52,6 +53,6 @@ class HelpView(ui.View):
         for cmd in self.slash_commands:
             embed.add_field(name=f"**/{cmd.name}**", value=f"{cmd.description}" or "Описание отсутствует")
         await interaction.response.send_message(embed=embed, ephemeral=True)
-
+'''
 def setup(bot: commands.Bot):
     bot.add_cog(HelpCog(bot))
