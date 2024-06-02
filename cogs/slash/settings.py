@@ -17,6 +17,14 @@ cursor.execute('''
 conn.commit()
 
 cursor.execute('''
+            CREATE TABLE IF NOT EXISTS logs_locales (
+            guild_id TEXT PRIMARY KEY, 
+            language TEXT
+             )
+        ''')
+conn.commit()
+
+cursor.execute('''
     CREATE TABLE IF NOT EXISTS voices (
     guild_id INTEGER PRIMARY KEY,
     channel_id INTEGER
@@ -204,6 +212,21 @@ class SettingsCog(commands.Cog):
         conn.commit()
 
         trans = await self.locale.get_translation(inter.author.id, 'locale')
+        footer = await self.locale.get_translation(inter.author.id, "footer")
+
+        E = disnake.Embed(title=trans[0], color=0x9bf8e0)
+        E.add_field(name=trans[1], value=f'```{trans[2].format(language=language)}```')
+        E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
+        await inter.response.send_message(embed=E, ephemeral=True)
+
+    @settings.sub_command(name='logs-lang', description="Хочешь, логи на французском? / Do you want French logs?")
+    @commands.has_permissions(view_audit_log=True)
+    async def set_logs_lang(self, inter: disnake.ApplicationCommandInteraction, language: str = commands.Param(choices=['Русский', 'English'])):
+        language_code = "ru" if language.lower() == "русский" else "en"
+        cursor.execute("REPLACE INTO logs_locales (guild_id, language) VALUES (?, ?)", (str(inter.guild.id), language_code))
+        conn.commit()
+
+        trans = await self.locale.get_translation(inter.author.id, 'logs_locale')
         footer = await self.locale.get_translation(inter.author.id, "footer")
 
         E = disnake.Embed(title=trans[0], color=0x9bf8e0)

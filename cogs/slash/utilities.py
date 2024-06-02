@@ -119,7 +119,7 @@ class UtilitiesCog(commands.Cog):
             other_translations["bots"].format(bot_count=len([member for member in guild.members if member.bot]))
         )
 
-        emb = disnake.Embed(title=f"{title_translations.format(guild_name=guild.name)}", description=description_translation.format(guild_description=guild.description) or 'Description is None.', сolor=disnake.Color.random())
+        emb = disnake.Embed(title=f"{title_translations.format(guild_name=guild.name)}", description=description_translation.format(guild_description=guild.description) or 'Description is None.', color=disnake.Color.random())
         emb.add_field(name=f"> {fields_translations['server']}", value='\n'.join(about_guild), inline=False)
         emb.add_field(name=f"> {fields_translations['roles']}", value='\n'.join(roles), inline=False)
         emb.add_field(name=f"> {fields_translations['channels_and_boosts']}", value='\n'.join(channels_and_boosts), inline=False)
@@ -136,22 +136,17 @@ class UtilitiesCog(commands.Cog):
     async def steal(self, inter: disnake.ApplicationCommandInteraction, emoji: disnake.PartialEmoji, name: str = None):
         guild = inter.guild
 
-        #читаем полученный эмодзи и его имя
         emoji_bytes = await emoji.read()
         emoji_name = name or emoji.name
 
-        #проверяем, есть ли на сервере эмодзи с похожим именем
         if any(emoji_name.lower() == existing_emoji.name.lower() for existing_emoji in guild.emojis):
             raise commands.CommandError(message='Это имя для эмодзи уже существует на этом сервере.')
-        else:
-            new_emoji = await guild.create_custom_emoji(name=emoji_name, image=emoji_bytes)
-            E = disnake.Embed(
-                title='💫 Эмодзи добавлен!',
-                color=0xb1ff98
-            )
-            E.add_field(name='Ответ команды:', value=f'```Эмодзи, который вы указали, был добавлен на эту вечеринку с именем {emoji_name}.```')
-            E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
-            await inter.response.send_message(embed=E)
+
+        new_emoji = await guild.create_custom_emoji(name=emoji_name, image=emoji_bytes)
+        E = disnake.Embed(title='💫 Эмодзи добавлен!', color=0xb1ff98)
+        E.add_field(name='Ответ команды:', value=f'```Эмодзи, который вы указали, был добавлен на эту вечеринку с именем {emoji_name}.```')
+        E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
+        await inter.response.send_message(embed=E)
     
     @utilities.sub_command(name='user', description='Помогу вывести информацию о всех пользователях Discord.')
     async def user(self, inter: disnake.ApplicationCommandInteraction, user: disnake.User = None):
@@ -305,7 +300,7 @@ class UtilitiesCog(commands.Cog):
             return
         
         emb.set_thumbnail(url=user.avatar)
-        await inter.reply(embed=emb)
+        await inter.response.send_message(embed=emb)
 
 '''class ProfileMenu(ui.View):
     def __init__(self, bot, author_id):
