@@ -157,13 +157,6 @@ class UtilitiesCog(commands.Cog):
         banner = await self.bot.fetch_user(user.id)
         created_at_indicator = f'<t:{int(user.created_at.timestamp())}:F>'
 
-        cursor.execute('SELECT prefix_name FROM prefix WHERE user_id = ?', (user.id,))
-        row = cursor.fetchone()
-        if row:
-            prefix = row[0]
-        else:
-            prefix = "px-"
-
         cursor.execute("SELECT * FROM blacklist WHERE user_id = ?", (user.id,))
         result = cursor.fetchone()
 
@@ -179,7 +172,6 @@ class UtilitiesCog(commands.Cog):
         )
 
         settings = [
-            f'**⭐ | Префикс: __{prefix}__**',
             f'**🩷 | Статус: __Скоро...__**'
         ]
 
