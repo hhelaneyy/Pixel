@@ -240,10 +240,6 @@ class UtilitiesCog(commands.Cog):
         else:
             lang = 'Unknown language'
 
-        cursor.execute('SELECT prefix_name FROM prefix WHERE user_id = ?', (user.id,))
-        row = cursor.fetchone()
-        prefix = row[0] if row else prefix_translation
-
         '''cursor.execute('SELECT age FROM ages WHERE user_id = ?', (user.id,))
         row = cursor.fetchone()
         age = row[0] if row else age_not_specified_translation'''
