@@ -47,11 +47,11 @@ class ErrorsCog(commands.Cog):
         else:
             em = str(e)
 
-            timestamp = datetime.now()
-            m = disnake.Embed(title=embed['title'], description=f'{embed['description']} {inter.data.name}', color=0xff0000)
-            m.add_field(name=embed['error_desc'], value=f"```{em}```")
-            m.set_footer(text=f"{random.choice(footer)} ∙ {timestamp.strftime(('%d.%m.%Y, %H:%M'))}", icon_url=self.bot.user.avatar.url)
-            await inter.send(embed=m, ephemeral=True)
+        timestamp = datetime.now()
+        m = disnake.Embed(title=embed['title'], description=f'{embed['description']} {inter.data.name}', color=0xff0000)
+        m.add_field(name=embed['error_desc'], value=f"```{em}```")
+        m.set_footer(text=f"{random.choice(footer)} ∙ {timestamp.strftime(('%d.%m.%Y, %H:%M'))}", icon_url=self.bot.user.avatar.url)
+        await inter.send(embed=m, ephemeral=True)
 
 def setup(bot: commands.Bot):
     bot.add_cog(ErrorsCog(bot))

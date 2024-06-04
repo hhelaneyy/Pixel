@@ -190,105 +190,103 @@ class UtilitiesCog(commands.Cog):
 
     @utilities.sub_command(description="Информация об участнике сервера. / Information about server member.")
     async def profile(self, inter: disnake.ApplicationCommandInteraction, user: disnake.Member | disnake.User = None):
-        blacklist_translation = await self.locale.get_translation(inter.author.id, "blacklist")
-        activity_translation = await self.locale.get_translation(inter.author.id, "activity")
-        bot_translation = await self.locale.get_translation(inter.author.id, "bot")
-        prefix_translation = await self.locale.get_translation(inter.author.id, "prefix")
+            blacklist_translation = await self.locale.get_translation(inter.author.id, "blacklist")
+            activity_translation = await self.locale.get_translation(inter.author.id, "activity")
+            bot_translation = await self.locale.get_translation(inter.author.id, "bot")
+            prefix_translation = await self.locale.get_translation(inter.author.id, "prefix")
 
-        if user is None:
-            user = inter.author
+            if user is None:
+                user = inter.author
 
-        cursor.execute("SELECT * FROM blacklist WHERE user_id = ?", (user.id,))
-        result = cursor.fetchone()
+            cursor.execute("SELECT * FROM blacklist WHERE user_id = ?", (user.id,))
+            result = cursor.fetchone()
 
-        if result:
-            blacklist = blacklist_translation[0]
-        else:
-            blacklist = blacklist_translation[1]
-
-        if user.bot == 'True':
-            boy = bot_translation[0]
-        else:
-            boy = bot_translation[1]
-
-        bot = bot_translation[int(user.bot)]
-
-        banner = await self.bot.fetch_user(user.id)
-
-        created_at_indicator = f'<t:{int(user.created_at.timestamp())}:R>'
-        joined_at_indicator = f'<t:{int(user.joined_at.timestamp())}:R>'
-
-        cursor.execute('SELECT language FROM locales WHERE user_id = ?', (user.id,))
-        langg = cursor.fetchone()
-
-        if langg:
-            langg = langg[0]
-            if langg == 'ru':
-                lang = 'Русский'
-            elif langg == 'en':
-                lang = 'English'
+            if result:
+                blacklist = blacklist_translation[0]
             else:
-                lang = 'Unknown language'
-        else:
-            lang = 'Unknown language'
+                blacklist = blacklist_translation[1]
 
-        '''cursor.execute('SELECT age FROM ages WHERE user_id = ?', (user.id,))
-        row = cursor.fetchone()
-        age = row[0] if row else age_not_specified_translation'''
+            if user.bot == 'True':
+                boy = bot_translation[0]
+            else:
+                boy = bot_translation[1]
 
-        user_info = await self.locale.get_translation(inter.author.id, "user_info")
-        other_info = await self.locale.get_translation(inter.author.id, "other_info")
-        babax_info = await self.locale.get_translation(inter.author.id, "babax_info")
-        database_info = await self.locale.get_translation(inter.author.id, "database_info")
-        profile = await self.locale.get_translation(inter.author.id, 'profile')
+            bot = bot_translation[int(user.bot)]
 
-        user_info_formatted = (
-            f"**{user_info[0].format(user_id=user.id)}**",
-            f"**{user_info[1].format(created_at_indicator=created_at_indicator)}**",
-            f"**{user_info[2]}**",
-            f"**{user_info[3].format(blacklist=blacklist)}**"
-        )
+            banner = await self.bot.fetch_user(user.id)
 
-        other_info_formatted = (
-            f"**{other_info[0].format(top_role_mention=user.top_role.mention)}**",
-            f"**{other_info[1].format(avatar_url=user.avatar.url)}**"
-        )
+            created_at_indicator = f'<t:{int(user.created_at.timestamp())}:R>'
+            joined_at_indicator = f'<t:{int(user.joined_at.timestamp())}:R>'
 
-        babax_info_formatted = (
-            f"**{babax_info[0].format(status=user.status)}**",
-            f"**{babax_info[1].format(bot=boy)}**",
-            f"**{babax_info[2].format(joined_at_indicator=joined_at_indicator)}**"
-        )
+            cursor.execute('SELECT language FROM locales WHERE user_id = ?', (user.id,))
+            langg = cursor.fetchone()
 
-        database_info_formatted = (
-            f"**{database_info[0].format(prefix=prefix)}**",
-            f"**{database_info[1].format(lang=lang)}**"
-        )
+            if langg:
+                langg = langg[0]
+                if langg == 'ru':
+                    lang = 'Русский'
+                else:
+                    lang = 'English'
+            else:
+                lang = 'English'
 
-        if banner and banner.banner:
-            other_info_formatted += (f"**{other_info[2].format(banner_url=banner.banner.url)}**",)
+            '''cursor.execute('SELECT age FROM ages WHERE user_id = ?', (user.id,))
+            row = cursor.fetchone()
+            age = row[0] if row else age_not_specified_translation'''
 
-        '''view = ProfileMenu(self.bot, inter.author.id)'''
+            user_info = await self.locale.get_translation(inter.author.id, "user_info")
+            other_info = await self.locale.get_translation(inter.author.id, "other_info")
+            babax_info = await self.locale.get_translation(inter.author.id, "babax_info")
+            database_info = await self.locale.get_translation(inter.author.id, "database_info")
+            profile = await self.locale.get_translation(inter.author.id, 'profile')
 
-        '''if user.id != inter.author.id:
-            view.children = []
+            user_info_formatted = (
+                f"**{user_info[0].format(user_id=user.id)}**",
+                f"**{user_info[1].format(created_at_indicator=created_at_indicator)}**",
+                f"**{user_info[2]}**",
+                f"**{user_info[3].format(blacklist=blacklist)}**"
+            )
 
-            view.bot = self.bot'''
+            other_info_formatted = (
+                f"**{other_info[0].format(top_role_mention=user.top_role.mention)}**",
+                f"**{other_info[1].format(avatar_url=user.avatar.url)}**"
+            )
 
-        emb = disnake.Embed(title=f'{profile[0].format(user_name=user.name)}', color=disnake.Color.random())
-        emb.add_field(name=f"> {profile[1]}", value='\n'.join(user_info_formatted), inline=False)
-        emb.add_field(name=f'> {profile[2]}', value='\n'.join(babax_info_formatted))
-        emb.add_field(name=f'> {profile[3]}', value='\n'.join(other_info_formatted))
-        emb.add_field(name=f'> {profile[4]}', value='\n'.join(database_info_formatted), inline=False)
-        emb.set_author(name=user.name, icon_url=user.avatar)
+            babax_info_formatted = (
+                f"**{babax_info[0].format(status=user.status)}**",
+                f"**{babax_info[1].format(bot=boy)}**",
+                f"**{babax_info[2].format(joined_at_indicator=joined_at_indicator)}**"
+            )
 
-        if banner and banner.banner:
-            emb.set_image(url=banner.banner.url)
-        if banner is None:
-            return
-        
-        emb.set_thumbnail(url=user.avatar)
-        await inter.response.send_message(embed=emb)
+            database_info_formatted = (
+                f'**Скоро... / Soon...**',
+                f"**{database_info[1].format(lang=lang)}**"
+            )
+
+            if banner and banner.banner:
+                other_info_formatted += (f"**{other_info[2].format(banner_url=banner.banner.url)}**",)
+
+            '''view = ProfileMenu(self.bot, inter.author.id)'''
+
+            '''if user.id != inter.author.id:
+                view.children = []
+    
+                view.bot = self.bot'''
+
+            emb = disnake.Embed(title=f'{profile[0].format(user_name=user.name)}', color=disnake.Color.random())
+            emb.add_field(name=f"> {profile[1]}", value='\n'.join(user_info_formatted), inline=False)
+            emb.add_field(name=f'> {profile[2]}', value='\n'.join(babax_info_formatted))
+            emb.add_field(name=f'> {profile[3]}', value='\n'.join(other_info_formatted))
+            emb.add_field(name=f'> {profile[4]}', value='\n'.join(database_info_formatted), inline=False)
+            emb.set_author(name=user.name, icon_url=user.avatar)
+
+            if banner and banner.banner:
+                emb.set_image(url=banner.banner.url)
+            if banner is None:
+                return
+
+            emb.set_thumbnail(url=user.avatar)
+            await inter.response.send_message(embed=emb)
 
 '''class ProfileMenu(ui.View):
     def __init__(self, bot, author_id):

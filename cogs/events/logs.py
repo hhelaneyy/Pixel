@@ -31,8 +31,8 @@ class LogsCog(commands.Cog):
             if before.content == after.content:
                 return
             else:
-                change = await self.locale.get_logs_translation(before.author.id, 'logs')
-                footer = await self.locale.get_logs_translation(before.author.id, 'footer')
+                change = await self.locale.get_logs_translation(before.guild.id, 'logs')
+                footer = await self.locale.get_logs_translation(before.guild.id, 'footer')
                 change_mes = change['change_message']
 
                 embed = disnake.Embed(title=change_mes['title'], color=0xfaee77)
@@ -73,7 +73,7 @@ class LogsCog(commands.Cog):
         guild = member.guild
         created_at_indicator = f'<t:{int(member.created_at.timestamp())}:F>'
 
-        footer = await self.locale.get_logs_translation(member.id, 'footer')
+        footer = await self.locale.get_logs_translation(guild.id, 'footer')
         new = await self.locale.get_logs_translation(guild.id, 'logs')
         memb = new['new_member']
 
@@ -147,8 +147,8 @@ class LogsCog(commands.Cog):
         if log_channel:
             embed = disnake.Embed(title=memb['title'], color=0xd54e4e)
             embed.add_field(name=memb['nickname'], value=f'{user.mention}')
-            embed.add_field(name=memb['reason'], value=reason)
             embed.add_field(name=memb['registration'], value=created_at_indicator)
+            embed.add_field(name=memb['reason'], value=f'```{reason}```')
             embed.set_thumbnail(url=user.avatar)
             embed.set_footer(text=random.choice(footer), icon_url=guild.icon)
             await log_channel.send(embed=embed)
@@ -165,7 +165,7 @@ class LogsCog(commands.Cog):
             embed.set_footer(text=random.choice(footer), icon_url=guild.icon)
             await log_channel.send(embed=embed)'''
 
-    '''@commands.Cog.listener()
+    @commands.Cog.listener()
     async def on_invite_create(self, invite: disnake.Invite):
         channel = self.get_log_channel(invite.guild)
         guild = invite.guild
@@ -175,7 +175,7 @@ class LogsCog(commands.Cog):
         E.add_field(name='Создатель приглашения:', value=invite.inviter)
         E.set_footer(text=random.choice(footer), icon_url=self.bot.user.avatar)
         E.set_thumbnail(url=guild.icon)
-        await channel.send(embed=E)'''
+        await channel.send(embed=E)
 
 def setup(bot: commands.Bot):
     bot.add_cog(LogsCog(bot))
