@@ -5,8 +5,6 @@ import requests
 from core.utilities.embeds import NSFW
 from cogs.events.locale import Locale
 
-TENOR_API_KEY = 'AIzaSyDIzri_pLPwTV_49BI3sDGcgJPSQ6DD3-g'
-
 class EntertainmentCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
